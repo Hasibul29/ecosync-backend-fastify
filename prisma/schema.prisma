@@ -13,6 +13,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Auth {
+  id           String  @id @default(uuid())
+  passwordHash String
+  User         User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String? @unique
+}
+
 model User {
   id        String @id @default(uuid())
   firstName String
@@ -20,6 +27,7 @@ model User {
   email     String @unique
   role      Role   @relation(fields: [roleId], references: [id])
   roleId    String
+  password  Auth?
 }
 
 model Role {

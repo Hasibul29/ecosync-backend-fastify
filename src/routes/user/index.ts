@@ -1,11 +1,15 @@
 import { FastifyPluginAsync } from "fastify";
 import prisma, { User } from "../../client";
 import { Prisma } from "@prisma/client";
-
+import { hash } from "../../hashing";
 interface ApiResponse<T> {
   success: boolean;
   message: string;
   data?: T;
+}
+
+interface UserRegistration extends User {
+  password: string;
 }
 
 const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
@@ -35,22 +39,26 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
   fastify.post("/", async (request, reply) => {
     try {
-      const body: User = request.body as User;
-
-      const data = await prisma.user
-        .create({
-          data: {
-            email: body.email,
-            firstName: body.firstName,
-            lastName: body.lastName,
-            role: {
-              connect: {
-                id: "95368932-006f-48eb-bcb0-24bc2e90580b",
-              },
+      const body = request.body as UserRegistration;
+      const passwordHash = await hash(body.password);
+      const data = await prisma.user.create({
+        data: {
+          password: {
+            create: {
+              passwordHash: passwordHash,
             },
           },
-        })
-        .catch((e) => e);
+          email: body.email,
+          firstName: body.firstName,
+          lastName: body.lastName,
+          role: {
+            connect: {
+              id: "95368932-006f-48eb-bcb0-24bc2e90580b",
+            },
+          },
+        },
+      });
+
       return reply.status(201).send({
         success: true,
         message: "User Registration Successful.",
@@ -79,22 +87,17 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       if (lastName !== undefined) updatedData.lastName = lastName;
       if (roleId !== undefined) updatedData.roleId = roleId;
 
-      const data = await prisma.user
-        .update({
-          where: {
-            id: id,
-          },
-          data: updatedData,
-          include: {
-            role: true,
-          },
-        })
-        .catch((e) => e);
+      const data = await prisma.user.update({
+        where: {
+          id: id,
+        },
+        data: updatedData,
+      });
       return reply.status(200).send({
         success: true,
         message: "User information updated successfully.",
         data: data,
-      } as ApiResponse<User>);
+      });
     } catch (error) {
       console.log("User update :", error);
       return reply.status(500).send({
