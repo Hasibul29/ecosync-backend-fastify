@@ -53,7 +53,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         .catch((e) => e);
       return reply.status(201).send({
         success: true,
-        message: "User Registration Successfull.",
+        message: "User Registration Successful.",
         data: data,
       } as ApiResponse<User>);
     } catch (error) {
