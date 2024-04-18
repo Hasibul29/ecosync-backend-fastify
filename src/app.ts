@@ -47,7 +47,6 @@ const app: FastifyPluginAsync<AppOptions> = async (
     secret: fs.readFileSync(join(__dirname, "secret-key")),
     hook: "preHandler",
   });
-
   // Do not touch the following lines
 
   // This loads all plugins defined in plugins

@@ -1,12 +1,8 @@
 import { FastifyPluginAsync } from "fastify";
-import prisma, { User } from "../../utils/client";
+import prisma, { User, Role } from "../../utils/client";
 import { Prisma } from "@prisma/client";
 import { hash } from "../../utils/hashing";
-interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data?: T;
-}
+import { errorResponse, ApiResponse } from "../../constants/constants";
 
 interface UserRegistration extends User {
   password: string;
@@ -15,7 +11,9 @@ interface UserRegistration extends User {
 const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   fastify.get(
     "/",
-    { preHandler: fastify.authenticate },
+    {
+      preHandler: fastify.authenticate,
+    },
     async (request, reply) => {
       try {
         const data = await prisma.user
@@ -32,11 +30,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         } as ApiResponse<User[]>);
       } catch (error) {
         console.log("Get User List:", error);
-        return reply.status(500).send({
-          success: false,
-          message:
-            "An unexpected error has occurred. Please contact the system administrator.",
-        } as ApiResponse<null>);
+        return reply.status(500).send(errorResponse);
       }
     }
   );
@@ -48,6 +42,16 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       try {
         const body = request.body as UserRegistration;
         const passwordHash = await hash(body.password);
+
+        const role = await prisma.role.findUnique({
+          select: {
+            id: true,
+          },
+          where: {
+            name: "Unassigned",
+          },
+        });
+
         const data = await prisma.user.create({
           data: {
             password: {
@@ -60,7 +64,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
             lastName: body.lastName,
             role: {
               connect: {
-                id: "95368932-006f-48eb-bcb0-24bc2e90580b",
+                id: role?.id,
               },
             },
           },
@@ -73,11 +77,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         } as ApiResponse<User>);
       } catch (error) {
         console.log("Create User:", error);
-        return reply.status(500).send({
-          success: false,
-          message:
-            "An unexpected error has occurred. Please contact the system administrator.",
-        } as ApiResponse<null>);
+        return reply.status(500).send(errorResponse);
       }
     }
   );
@@ -87,17 +87,18 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     { preHandler: fastify.authenticate },
     async (request, reply) => {
       try {
-        const { id, firstName, lastName, roleId } =
-          request.body as Partial<User>;
+        const { id, firstName, lastName } = request.body as Partial<User>;
 
         if (id === undefined)
-          return reply.status(400).send({ message: "ID is required" });
+          return reply.status(400).send({
+            success: false,
+            message: "ID is required.",
+          } as ApiResponse<null>);
 
         const updatedData: Partial<User> = {};
 
         if (firstName !== undefined) updatedData.firstName = firstName;
         if (lastName !== undefined) updatedData.lastName = lastName;
-        if (roleId !== undefined) updatedData.roleId = roleId;
 
         const data = await prisma.user.update({
           where: {
@@ -107,16 +108,12 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         });
         return reply.status(200).send({
           success: true,
-          message: "User information updated successfully.",
+          message: "User information update successful.",
           data: data,
-        });
+        } as ApiResponse<User>);
       } catch (error) {
         console.log("User update :", error);
-        return reply.status(500).send({
-          success: false,
-          message:
-            "An unexpected error has occurred. Please contact the system administrator.",
-        } as ApiResponse<null>);
+        return reply.status(500).send(errorResponse);
       }
     }
   );
@@ -134,7 +131,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         });
         return reply.status(200).send({
           success: true,
-          message: "User deleted Successfully.",
+          message: "User data deletion Successful.",
         } as ApiResponse<null>);
       } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -146,14 +143,69 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           }
         }
         console.log("User delete :", error);
-        return reply.status(500).send({
-          success: false,
-          message:
-            "An unexpected error has occurred. Please contact the system administrator.",
-        } as ApiResponse<null>);
+        return reply.status(500).send(errorResponse);
       }
     }
   );
+
+  fastify.get("/roles", async (request, reply) => {
+    try {
+      const data = await prisma.role.findMany({
+        select: {
+          id: true,
+          name: true,
+        },
+      });
+      return reply.code(200).send({
+        success: true,
+        message: "Role List.",
+        data: data,
+      } as ApiResponse<Role[]>);
+    } catch (error) {
+      console.log("Role List :", error);
+      return reply.status(500).send(errorResponse);
+    }
+  });
+
+  fastify.put("/:id/roles", async (request, reply) => {
+    try {
+      const roleId = request.body as string;
+      const { id } = request.params as { id: string };
+
+      const role = await prisma.role.findUnique({ where: { id: roleId } });
+
+      if (!role)
+        return reply.status(400).send({
+          success: false,
+          message: "Invalid roleId.",
+        } as ApiResponse<null>);
+
+      await prisma.user.update({
+        data: {
+          roleId: roleId,
+        },
+        where: {
+          id: id,
+        },
+      });
+
+      return reply.status(200).send({
+        success: true,
+        message: "User role update successful",
+      } as ApiResponse<null>);
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === "P2025") {
+          return reply.status(404).send({
+            success: false,
+            message: "User not found.",
+          } as ApiResponse<null>);
+        }
+      }
+      console.log("Update user role :", error);
+      return reply.status(500).send(errorResponse);
+    }
+  });
 };
 
 export default user;
