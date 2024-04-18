@@ -18,13 +18,12 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     },
     async (request, reply) => {
       try {
-        const data = await prisma.user
-          .findMany({
-            include: {
-              role: true,
-            },
-          })
-          .catch((e) => e);
+        const data = await prisma.user.findMany({
+          include: {
+            role: true,
+          },
+        });
+
         return reply.status(200).send({
           success: true,
           message: "User List.",
@@ -32,6 +31,36 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         } as ApiResponse<User[]>);
       } catch (error) {
         console.log("Get User List:", error);
+        return reply.status(500).send(errorResponse);
+      }
+    }
+  );
+
+  fastify.get(
+    "/:id",
+    {
+      preHandler: fastify.authenticate,
+    },
+    async (request, reply) => {
+      try {
+        const { id } = request.params as { id: string };
+
+        const data = await prisma.user.findUnique({
+          include: {
+            role: true,
+          },
+          where: {
+            id: id,
+          },
+        });
+
+        return reply.status(200).send({
+          success: true,
+          message: "User Data.",
+          data: data,
+        } as ApiResponse<User>);
+      } catch (error) {
+        console.log("Get User Data:", error);
         return reply.status(500).send(errorResponse);
       }
     }
