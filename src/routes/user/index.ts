@@ -3,6 +3,8 @@ import prisma, { User, Role } from "../../utils/client";
 import { Prisma } from "@prisma/client";
 import { hash } from "../../utils/hashing";
 import { errorResponse, ApiResponse } from "../../constants/constants";
+import { transporter } from "../../constants/constants";
+import { accountRegistration } from "../../utils/accountCreateEmail";
 
 interface UserRegistration extends User {
   password: string;
@@ -70,12 +72,36 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           },
         });
 
+        const mailOptions = {
+          from: {
+            name: "EcoSync",
+            address: process.env.SENDER_EMAIL || "",
+          },
+          to: body.email,
+          subject: "Account registration for EcoSync.",
+          html: accountRegistration({
+            name: `${body.firstName} ${body.lastName}`,
+            email: body.email,
+            password: body.password,
+          }),
+        };
+
+        transporter.sendMail(mailOptions);
+
         return reply.status(201).send({
           success: true,
           message: "User Registration Successful.",
           data: data,
         } as ApiResponse<User>);
       } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+          if (error.code === "P2002") {
+            return reply.status(404).send({
+              success: false,
+              message: "User already exist.",
+            } as ApiResponse<null>);
+          }
+        }
         console.log("Create User:", error);
         return reply.status(500).send(errorResponse);
       }
@@ -112,6 +138,14 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           data: data,
         } as ApiResponse<User>);
       } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+          if (error.code === "P2025") {
+            return reply.status(404).send({
+              success: false,
+              message: "User not found.",
+            } as ApiResponse<null>);
+          }
+        }
         console.log("User update :", error);
         return reply.status(500).send(errorResponse);
       }

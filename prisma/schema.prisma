@@ -18,6 +18,7 @@ model Auth {
   passwordHash String
   User         User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId       String? @unique
+  OTP          OTP?
 }
 
 model User {
@@ -41,4 +42,12 @@ model Permission {
   id    String @id @default(uuid())
   name  String @unique
   roles Role[]
+}
+
+model OTP {
+  id         String   @id @default(uuid())
+  code       String
+  expiration DateTime
+  Auth       Auth     @relation(fields: [userId], references: [userId])
+  userId     String   @unique
 }
