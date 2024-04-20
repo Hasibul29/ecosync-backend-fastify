@@ -34,14 +34,16 @@ model User {
 model Role {
   id          String       @id @default(uuid())
   name        String       @unique
+  description String?
   permissions Permission[]
   User        User[]
 }
 
 model Permission {
-  id    String @id @default(uuid())
-  name  String @unique
-  roles Role[]
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String?
+  roles       Role[]
 }
 
 model OTP {

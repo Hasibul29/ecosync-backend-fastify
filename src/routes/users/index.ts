@@ -5,6 +5,8 @@ import { hash } from "../../utils/hashing";
 import { errorResponse, ApiResponse } from "../../constants/constants";
 import { transporter } from "../../constants/constants";
 import { accountRegistration } from "../../utils/accountCreateEmail";
+import { Permissions } from "../../permissions";
+import permissionMiddleware from "../../middleware/permissionsMiddleware";
 
 interface UserRegistration extends User {
   password: string;
@@ -14,7 +16,10 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   fastify.get(
     "/",
     {
-      preHandler: fastify.authenticate,
+      preHandler: [
+        fastify.authenticate,
+        permissionMiddleware(Permissions.UsersRead),
+      ],
     },
     async (request, reply) => {
       try {
@@ -39,7 +44,10 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   fastify.get(
     "/:id",
     {
-      preHandler: fastify.authenticate,
+      preHandler: [
+        fastify.authenticate,
+        permissionMiddleware(Permissions.UsersReadOwn),
+      ],
     },
     async (request, reply) => {
       try {
@@ -68,7 +76,12 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
   fastify.post(
     "/",
-    { preHandler: fastify.authenticate },
+    {
+      preHandler: [
+        fastify.authenticate,
+        permissionMiddleware(Permissions.UsersWrite),
+      ],
+    },
     async (request, reply) => {
       try {
         const body = request.body as UserRegistration;
@@ -139,7 +152,12 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
   fastify.put(
     "/",
-    { preHandler: fastify.authenticate },
+    {
+      preHandler: [
+        fastify.authenticate,
+        permissionMiddleware(Permissions.UsersEditOwn),
+      ],
+    },
     async (request, reply) => {
       try {
         const { id, firstName, lastName } = request.body as Partial<User>;
@@ -183,7 +201,12 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
   fastify.delete(
     "/:id",
-    { preHandler: fastify.authenticate },
+    {
+      preHandler: [
+        fastify.authenticate,
+        permissionMiddleware(Permissions.UsersDelete),
+      ],
+    },
     async (request, reply) => {
       try {
         const { id } = request.params as User;
@@ -211,64 +234,82 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     }
   );
 
-  fastify.get("/roles", async (request, reply) => {
-    try {
-      const data = await prisma.role.findMany({
-        select: {
-          id: true,
-          name: true,
-        },
-      });
-      return reply.code(200).send({
-        success: true,
-        message: "Role List.",
-        data: data,
-      } as ApiResponse<Role[]>);
-    } catch (error) {
-      console.log("Role List :", error);
-      return reply.status(500).send(errorResponse);
-    }
-  });
-
-  fastify.put("/:id/roles", async (request, reply) => {
-    try {
-      const roleId = request.body as string;
-      const { id } = request.params as { id: string };
-
-      const role = await prisma.role.findUnique({ where: { id: roleId } });
-
-      if (!role)
-        return reply.status(400).send({
-          success: false,
-          message: "Invalid roleId.",
-        } as ApiResponse<null>);
-
-      await prisma.user.update({
-        data: {
-          roleId: roleId,
-        },
-        where: {
-          id: id,
-        },
-      });
-
-      return reply.status(200).send({
-        success: true,
-        message: "User role update successful",
-      } as ApiResponse<null>);
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === "P2025") {
-          return reply.status(404).send({
-            success: false,
-            message: "User not found.",
-          } as ApiResponse<null>);
-        }
+  fastify.get(
+    "/roles",
+    {
+      preHandler: [
+        fastify.authenticate,
+        permissionMiddleware(Permissions.UsersRoleReadAll),
+      ],
+    },
+    async (request, reply) => {
+      try {
+        const data = await prisma.role.findMany({
+          select: {
+            id: true,
+            name: true,
+          },
+        });
+        return reply.code(200).send({
+          success: true,
+          message: "Role List.",
+          data: data,
+        } as ApiResponse<Role[]>);
+      } catch (error) {
+        console.log("Role List :", error);
+        return reply.status(500).send(errorResponse);
       }
-      console.log("Update user role :", error);
-      return reply.status(500).send(errorResponse);
     }
-  });
+  );
+
+  fastify.put(
+    "/:userId/roles",
+    {
+      preHandler: [
+        fastify.authenticate,
+        permissionMiddleware(Permissions.UsersRoleUpdate),
+      ],
+    },
+    async (request, reply) => {
+      try {
+        const { roleId } = request.body as { roleId: string };
+        const { userId } = request.params as { userId: string };
+
+        const role = await prisma.role.findUnique({ where: { id: roleId } });
+
+        if (!role)
+          return reply.status(400).send({
+            success: false,
+            message: "Invalid roleId.",
+          } as ApiResponse<null>);
+
+        await prisma.user.update({
+          data: {
+            roleId: roleId,
+          },
+          where: {
+            id: userId,
+          },
+        });
+
+        return reply.status(200).send({
+          success: true,
+          message: "User role update successful",
+        } as ApiResponse<null>);
+      } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+          if (error.code === "P2025") {
+            return reply.status(404).send({
+              success: false,
+              message: "User not found.",
+            } as ApiResponse<null>);
+          }
+        }
+        console.log("Update user role :", error);
+        return reply.status(500).send(errorResponse);
+      }
+    }
+  );
 };
 
 export default user;

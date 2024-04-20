@@ -12,6 +12,7 @@ declare module "fastify" {
 type UserPayload = {
   id: string;
   email: string;
+  role: string;
 };
 declare module "@fastify/jwt" {
   interface FastifyJWT {
