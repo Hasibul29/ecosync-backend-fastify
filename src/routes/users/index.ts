@@ -18,7 +18,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        permissionMiddleware(Permissions.UsersRead),
+        fastify.permission(Permissions.UsersRead),
       ],
     },
     async (request, reply) => {
@@ -46,7 +46,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        permissionMiddleware(Permissions.UsersReadOwn),
+        fastify.permission(Permissions.UsersReadOwn)
       ],
     },
     async (request, reply) => {
@@ -79,7 +79,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        permissionMiddleware(Permissions.UsersWrite),
+        fastify.permission(Permissions.UsersWrite)
       ],
     },
     async (request, reply) => {
@@ -155,7 +155,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        permissionMiddleware(Permissions.UsersEditOwn),
+        fastify.permission(Permissions.UsersEditOwn)
       ],
     },
     async (request, reply) => {
@@ -204,7 +204,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        permissionMiddleware(Permissions.UsersDelete),
+        fastify.permission(Permissions.UsersDelete)
       ],
     },
     async (request, reply) => {
@@ -239,7 +239,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        permissionMiddleware(Permissions.UsersRoleReadAll),
+        fastify.permission(Permissions.UsersRoleReadAll)
       ],
     },
     async (request, reply) => {
@@ -267,7 +267,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        permissionMiddleware(Permissions.UsersRoleUpdate),
+        fastify.permission(Permissions.UsersRoleUpdate)
       ],
     },
     async (request, reply) => {

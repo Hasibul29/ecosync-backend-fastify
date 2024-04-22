@@ -11,7 +11,7 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        permissionMiddleware(Permissions.RolesRead),
+        fastify.permission(Permissions.RolesRead)
       ],
     },
     async function (request, reply) {
@@ -38,7 +38,7 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        permissionMiddleware(Permissions.RolesWrite),
+        fastify.permission(Permissions.RolesWrite)
       ],
     },
     async function (request, reply) {
@@ -78,7 +78,7 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        permissionMiddleware(Permissions.RolesDelete),
+        fastify.permission(Permissions.RolesDelete)
       ],
     },
     async function (request, reply) {
@@ -108,7 +108,7 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        permissionMiddleware(Permissions.RolesPermission),
+        fastify.permission(Permissions.RolesPermission)
       ],
     },
     async function (request, reply) {
@@ -146,7 +146,7 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        permissionMiddleware(Permissions.RolesPermissionDelete),
+        fastify.permission(Permissions.RolesPermissionDelete)
       ],
     },
     async function (request, reply) {
@@ -184,7 +184,7 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        permissionMiddleware(Permissions.PermissionsRead),
+        fastify.permission(Permissions.PermissionsRead)
       ],
     },
     async function (request, reply) {

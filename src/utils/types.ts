@@ -6,13 +6,13 @@ declare module "fastify" {
   }
   export interface FastifyInstance {
     authenticate: any;
+    permission:any
   }
 }
 
 type UserPayload = {
   id: string;
   email: string;
-  role: string;
 };
 declare module "@fastify/jwt" {
   interface FastifyJWT {

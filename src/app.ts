@@ -9,6 +9,7 @@ import {
 } from "fastify";
 import fjwt, { FastifyJWT } from "@fastify/jwt";
 import fCookie from "@fastify/cookie";
+import permissionMiddleware from "./middleware/permissionsMiddleware";
 
 export interface AppOptions
   extends FastifyServerOptions,
@@ -28,6 +29,8 @@ const app: FastifyPluginAsync<AppOptions> = async (
     req.jwt = fastify.jwt;
     return next();
   });
+
+  fastify.decorate("permission",permissionMiddleware);
 
   fastify.decorate(
     "authenticate",

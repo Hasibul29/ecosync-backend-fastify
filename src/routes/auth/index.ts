@@ -36,8 +36,7 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       }
       const payload = {
         id: user.id,
-        email: user.email,
-        role: user.roleId,
+        email: user.email
       };
       const token = request.jwt.sign(payload);
 
