@@ -2,7 +2,6 @@ import { FastifyPluginAsync } from "fastify";
 import prisma, { Role, Permission } from "../../utils/client";
 import { ApiResponse, errorResponse } from "../../constants/constants";
 import { Prisma } from "@prisma/client";
-import permissionMiddleware from "../../middleware/permissionsMiddleware";
 import { Permissions } from "../../permissions";
 
 const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {

@@ -3,10 +3,9 @@ import prisma, { User, Role } from "../../utils/client";
 import { Prisma } from "@prisma/client";
 import { hash } from "../../utils/hashing";
 import { errorResponse, ApiResponse } from "../../constants/constants";
-import { transporter } from "../../constants/constants";
+import transporter from "../../utils/mailSender";
 import { accountRegistration } from "../../utils/accountCreateEmail";
 import { Permissions } from "../../permissions";
-import permissionMiddleware from "../../middleware/permissionsMiddleware";
 
 interface UserRegistration extends User {
   password: string;

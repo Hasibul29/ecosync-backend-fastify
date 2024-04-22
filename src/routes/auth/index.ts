@@ -2,7 +2,7 @@ import { FastifyPluginAsync } from "fastify";
 import prisma from "../../utils/client";
 import { hash, compare } from "../../utils/hashing";
 import { ApiResponse, errorResponse } from "../../constants/constants";
-import { transporter } from "../../constants/constants";
+import transporter from "../../utils/mailSender";
 import {
   passwordResetConfirm,
   resetPassword,
