@@ -6,7 +6,7 @@ declare module "fastify" {
   }
   export interface FastifyInstance {
     authenticate: any;
-    permission:any
+    permission: any;
   }
 }
 

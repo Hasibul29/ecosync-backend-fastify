@@ -10,6 +10,7 @@ import {
 import fjwt, { FastifyJWT } from "@fastify/jwt";
 import fCookie from "@fastify/cookie";
 import permissionMiddleware from "./middleware/permissionsMiddleware";
+import cors from "@fastify/cors";
 
 export interface AppOptions
   extends FastifyServerOptions,
@@ -22,6 +23,12 @@ const app: FastifyPluginAsync<AppOptions> = async (
   opts
 ): Promise<void> => {
   // Place here your custom code!
+
+  await fastify.register(cors, {
+    origin: "*",
+    credentials: true,
+  });
+
   fastify.register(fjwt, {
     secret: fs.readFileSync(join(__dirname, "secret-key")),
   });
@@ -30,7 +37,7 @@ const app: FastifyPluginAsync<AppOptions> = async (
     return next();
   });
 
-  fastify.decorate("permission",permissionMiddleware);
+  fastify.decorate("permission", permissionMiddleware);
 
   fastify.decorate(
     "authenticate",
