@@ -24,13 +24,8 @@ const app: FastifyPluginAsync<AppOptions> = async (
 ): Promise<void> => {
   // Place here your custom code!
 
-  fastify.register(fCookie).register(require("@fastify/secure-session"), {
-    secretKey: fs.readFileSync(join(__dirname, "secret-key")), // Replace with a strong secret
-    cookie: {
-      secure: true,
-      httpOnly: true,
-      sameSite: "strict",
-    },
+  fastify.register(fCookie, {
+    secret: fs.readFileSync(join(__dirname, "secret-key")),
   });
 
   await fastify.register(cors, {

@@ -44,6 +44,8 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         path: "/",
         httpOnly: true,
         secure: true,
+        sameSite: "strict",
+        maxAge: 24 * 60 * 60 * 1000, //1 day
       });
 
       return reply.status(200).send({
