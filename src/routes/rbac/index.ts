@@ -10,7 +10,7 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.RolesRead)
+        fastify.permission(Permissions.RolesRead),
       ],
     },
     async function (request, reply) {
@@ -37,7 +37,7 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.RolesWrite)
+        fastify.permission(Permissions.RolesWrite),
       ],
     },
     async function (request, reply) {
@@ -63,7 +63,7 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
             return reply.status(404).send({
               success: false,
               message: "Role already exist.",
-            } as ApiResponse<null>);
+            } as ApiResponse);
           }
         }
         console.log("Role add :", error);
@@ -77,7 +77,7 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.RolesDelete)
+        fastify.permission(Permissions.RolesDelete),
       ],
     },
     async function (request, reply) {
@@ -107,7 +107,7 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.RolesPermission)
+        fastify.permission(Permissions.RolesPermission),
       ],
     },
     async function (request, reply) {
@@ -145,7 +145,7 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.RolesPermissionDelete)
+        fastify.permission(Permissions.RolesPermissionDelete),
       ],
     },
     async function (request, reply) {
@@ -183,7 +183,7 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.PermissionsRead)
+        fastify.permission(Permissions.PermissionsRead),
       ],
     },
     async function (request, reply) {

@@ -45,7 +45,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.UsersReadOwn)
+        fastify.permission(Permissions.UsersReadOwn),
       ],
     },
     async (request, reply) => {
@@ -78,7 +78,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.UsersWrite)
+        fastify.permission(Permissions.UsersWrite),
       ],
     },
     async (request, reply) => {
@@ -140,7 +140,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
             return reply.status(404).send({
               success: false,
               message: "User already exist.",
-            } as ApiResponse<null>);
+            } as ApiResponse);
           }
         }
         console.log("Create User:", error);
@@ -154,7 +154,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.UsersEditOwn)
+        fastify.permission(Permissions.UsersEditOwn),
       ],
     },
     async (request, reply) => {
@@ -165,7 +165,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           return reply.status(400).send({
             success: false,
             message: "ID is required.",
-          } as ApiResponse<null>);
+          } as ApiResponse);
 
         const updatedData: Partial<User> = {};
 
@@ -189,7 +189,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
             return reply.status(404).send({
               success: false,
               message: "User not found.",
-            } as ApiResponse<null>);
+            } as ApiResponse);
           }
         }
         console.log("User update :", error);
@@ -203,7 +203,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.UsersDelete)
+        fastify.permission(Permissions.UsersDelete),
       ],
     },
     async (request, reply) => {
@@ -217,14 +217,14 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         return reply.status(200).send({
           success: true,
           message: "User data deletion Successful.",
-        } as ApiResponse<null>);
+        } as ApiResponse);
       } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
           if (error.code === "P2025") {
             return reply.status(404).send({
               success: false,
               message: "User not found.",
-            } as ApiResponse<null>);
+            } as ApiResponse);
           }
         }
         console.log("User delete :", error);
@@ -238,7 +238,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.UsersRoleReadAll)
+        fastify.permission(Permissions.UsersRoleReadAll),
       ],
     },
     async (request, reply) => {
@@ -266,7 +266,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.UsersRoleUpdate)
+        fastify.permission(Permissions.UsersRoleUpdate),
       ],
     },
     async (request, reply) => {
@@ -280,7 +280,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           return reply.status(400).send({
             success: false,
             message: "Invalid roleId.",
-          } as ApiResponse<null>);
+          } as ApiResponse);
 
         await prisma.user.update({
           data: {
@@ -294,14 +294,14 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         return reply.status(200).send({
           success: true,
           message: "User role update successful",
-        } as ApiResponse<null>);
+        } as ApiResponse);
       } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
           if (error.code === "P2025") {
             return reply.status(404).send({
               success: false,
               message: "User not found.",
-            } as ApiResponse<null>);
+            } as ApiResponse);
           }
         }
         console.log("Update user role :", error);

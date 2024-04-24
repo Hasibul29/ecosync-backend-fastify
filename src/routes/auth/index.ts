@@ -67,7 +67,7 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       return reply.status(200).send({
         success: true,
         message: "User is authenticated.",
-      } as ApiResponse<null>);
+      } as ApiResponse);
     }
   );
 
@@ -84,7 +84,7 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       return reply.send({
         success: true,
         message: "Logout successful",
-      } as ApiResponse<null>);
+      } as ApiResponse);
     } catch (error) {
       console.log("logout", error);
       return reply.status(500).send(errorResponse);
@@ -104,7 +104,7 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         return reply.status(400).send({
           success: false,
           message: "User not exist",
-        } as ApiResponse<null>);
+        } as ApiResponse);
       const otp = generateOTP();
       const otpData = await prisma.oTP.findUnique({
         where: {
@@ -149,7 +149,7 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       return reply.send({
         success: true,
         message: "An email was sent to the user.",
-      } as ApiResponse<null>);
+      } as ApiResponse);
     } catch (error) {
       console.log("Reset initiate", error);
       return reply.status(500).send(errorResponse);
@@ -177,18 +177,18 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           return reply.status(400).send({
             success: false,
             message: "Invalid OTP or OTP expired.",
-          } as ApiResponse<null>);
+          } as ApiResponse);
         }
         return reply.send({
           success: true,
           message: "OTP verified successfully.",
-        } as ApiResponse<null>);
+        } as ApiResponse);
       } else if (step === "1") {
         if (newPassword !== confirmPassword) {
           return reply.status(400).send({
             success: false,
             message: "Password didn't match.",
-          } as ApiResponse<null>);
+          } as ApiResponse);
         }
         const passwordHash = await hash(newPassword);
         await prisma.auth.update({
@@ -221,12 +221,12 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         return reply.status(200).send({
           success: true,
           message: "Password reset successful.",
-        } as ApiResponse<null>);
+        } as ApiResponse);
       } else {
         return reply.status(400).send({
           success: false,
           message: "Invalid request.",
-        } as ApiResponse<null>);
+        } as ApiResponse);
       }
     } catch (error) {
       console.log("Reset confirm", error);

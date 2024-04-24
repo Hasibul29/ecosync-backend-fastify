@@ -23,20 +23,15 @@ const app: FastifyPluginAsync<AppOptions> = async (
   opts
 ): Promise<void> => {
   // Place here your custom code!
-
-  fastify.register(fCookie, {
-    secret: fs.readFileSync(join(__dirname, "secret-key")),
-  });
-
+  const secret = fs.readFileSync(join(__dirname, "secret-key"));
+  fastify.register(fCookie, { secret });
   await fastify.register(cors, {
     origin: "http://localhost:5173",
     credentials: true,
   });
 
-  fastify.register(fjwt, {
-    secret: fs.readFileSync(join(__dirname, "secret-key")),
-  });
-  fastify.addHook("preHandler", (req, res, next) => {
+  fastify.register(fjwt, { secret });
+  fastify.addHook("preHandler", (req, _, next) => {
     req.jwt = fastify.jwt;
     return next();
   });
@@ -55,7 +50,8 @@ const app: FastifyPluginAsync<AppOptions> = async (
       try {
         const decoded = req.jwt.verify<FastifyJWT["user"]>(token);
         req.user = decoded;
-      } catch (error) {
+        return;
+      } catch {
         return reply
           .status(401)
           .send({ success: false, message: "Invalid or expired token" });
@@ -68,13 +64,13 @@ const app: FastifyPluginAsync<AppOptions> = async (
   // This loads all plugins defined in plugins
   // those should be support plugins that are reused
   // through your application
-  void fastify.register(AutoLoad, {
+  await fastify.register(AutoLoad, {
     dir: join(__dirname, "plugins"),
     options: opts,
   });
   // This loads all plugins defined in routes
   // define your routes in one of these
-  void fastify.register(AutoLoad, {
+  await fastify.register(AutoLoad, {
     dir: join(__dirname, "routes"),
     options: opts,
   });
