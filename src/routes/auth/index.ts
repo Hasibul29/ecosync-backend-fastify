@@ -1,5 +1,5 @@
 import { FastifyPluginAsync } from "fastify";
-import prisma from "../../utils/client";
+import prisma, { User } from "../../utils/client";
 import { hash, compare } from "../../utils/hashing";
 import { ApiResponse, errorResponse } from "../../constants/constants";
 import transporter from "../../utils/mailSender";
@@ -31,6 +31,7 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       console.log(isMatch);
       if (!user || !isMatch) {
         return reply.code(401).send({
+          success: false,
           message: "Invalid email or password",
         });
       }
@@ -44,23 +45,42 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         path: "/",
         httpOnly: true,
         secure: true,
-        sameSite: "strict",
-        maxAge: 24 * 60 * 60 * 1000, //1 day
+        sameSite: "none",
+        maxAge: 24 * 60 * 60, //1 day
       });
 
       return reply.status(200).send({
         success: true,
         message: "Login Successful",
-      } as ApiResponse<null>);
+        data: user,
+      } as ApiResponse<User>);
     } catch (error) {
       console.log("Login", error);
       return reply.status(500).send(errorResponse);
     }
   });
 
+  fastify.get(
+    "/authenticated",
+    { preHandler: fastify.authenticate },
+    (request, reply) => {
+      return reply.status(200).send({
+        success: true,
+        message: "User is authenticated.",
+      } as ApiResponse<null>);
+    }
+  );
+
   fastify.post("/logout", async function (request, reply) {
     try {
-      reply.clearCookie("access_token");
+      reply.clearCookie("access_token", {
+        path: "/",
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        maxAge: 0,
+      });
+
       return reply.send({
         success: true,
         message: "Logout successful",
