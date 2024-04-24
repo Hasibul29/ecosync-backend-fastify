@@ -24,6 +24,15 @@ const app: FastifyPluginAsync<AppOptions> = async (
 ): Promise<void> => {
   // Place here your custom code!
 
+  fastify.register(fCookie).register(require("@fastify/secure-session"), {
+    secretKey: fs.readFileSync(join(__dirname, "secret-key")), // Replace with a strong secret
+    cookie: {
+      secure: true,
+      httpOnly: true,
+      sameSite: "strict",
+    },
+  });
+
   await fastify.register(cors, {
     origin: "*",
     credentials: true,
@@ -43,20 +52,22 @@ const app: FastifyPluginAsync<AppOptions> = async (
     "authenticate",
     async (req: FastifyRequest, reply: FastifyReply) => {
       const token = req.cookies.access_token;
-
       if (!token) {
-        return reply.status(401).send({ message: "Authentication required" });
+        return reply
+          .status(401)
+          .send({ success: false, message: "Authentication required" });
       }
-      const decoded = req.jwt.verify<FastifyJWT["user"]>(token);
-      req.user = decoded;
+      try {
+        const decoded = req.jwt.verify<FastifyJWT["user"]>(token);
+        req.user = decoded;
+      } catch (error) {
+        return reply
+          .status(401)
+          .send({ success: false, message: "Invalid or expired token" });
+      }
     }
   );
 
-  // cookies
-  fastify.register(fCookie, {
-    secret: fs.readFileSync(join(__dirname, "secret-key")),
-    hook: "preHandler",
-  });
   // Do not touch the following lines
 
   // This loads all plugins defined in plugins

@@ -1,4 +1,5 @@
 import { JWT } from "@fastify/jwt";
+import { Session } from "@fastify/secure-session";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -7,6 +8,7 @@ declare module "fastify" {
   export interface FastifyInstance {
     authenticate: any;
     permission: any;
+    session: Session;
   }
 }
 
