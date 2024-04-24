@@ -167,6 +167,12 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
             message: "ID is required.",
           } as ApiResponse);
 
+        if (id !== request.user.id)
+          return reply.status(403).send({
+            success: false,
+            message: "Forbidden.",
+          } as ApiResponse);
+
         const updatedData: Partial<User> = {};
 
         if (firstName !== undefined) updatedData.firstName = firstName;
