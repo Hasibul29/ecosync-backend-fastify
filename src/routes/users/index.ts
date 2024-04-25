@@ -107,7 +107,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
             lastName: body.lastName,
             role: {
               connect: {
-                id: role?.id,
+                id: body.roleId ?? role?.id,
               },
             },
           },
