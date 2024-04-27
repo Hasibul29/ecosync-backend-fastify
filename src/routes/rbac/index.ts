@@ -10,16 +10,12 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.RolesRead),
+        // fastify.permission(Permissions.RolesRead),
       ],
     },
     async function (request, reply) {
       try {
-        const data = await prisma.role.findMany({
-          include: {
-            permissions: true,
-          },
-        });
+        const data = await prisma.role.findMany({});
         return reply.send({
           success: true,
           message: "Roles list with permissions.",
@@ -72,12 +68,48 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     }
   );
 
+  fastify.put(
+    "/roles",
+    {
+      preHandler: [
+        fastify.authenticate,
+        // fastify.permission(Permissions.RolesUpdate),
+      ],
+    },
+    async function (request, reply) {
+      try {
+        const { id, name, description } = request.body as {
+          id: string;
+          name: string;
+          description: string;
+        };
+        const data = await prisma.role.update({
+          where: {
+            id: id,
+          },
+          data: {
+            name: name,
+            description: description,
+          },
+        });
+        return reply.send({
+          success: true,
+          message: "Role updated Successfully.",
+          data: data,
+        } as ApiResponse<Role>);
+      } catch (error) {
+        console.log("Role add :", error);
+        return reply.status(200).send(errorResponse);
+      }
+    }
+  );
+
   fastify.delete(
     "/roles/:roleId",
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.RolesDelete),
+        // fastify.permission(Permissions.RolesDelete),
       ],
     },
     async function (request, reply) {
@@ -101,27 +133,103 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       }
     }
   );
+  fastify.get(
+    "/:roleId/permissions",
+    {
+      preHandler: [
+        fastify.authenticate,
+        // fastify.permission(Permissions.RolesPermissionRead),
+      ],
+    },
+    async function (request, reply) {
+      try {
+        const { roleId } = request.params as { roleId: string };
+      
+        const data = await prisma.permission.findMany({
+          where: {
+            roles: {
+              some: {
+                id: roleId,
+              }
+            }
+          },
+        });
+        return reply.send({
+          success: true,
+          message: "Permissions list.",
+          data: data,
+        } as ApiResponse<Permission[]>);
+      } catch (error) {
+        console.log("Permission get :", error);
+        return reply.status(200).send(errorResponse);
+      }
+    }
+  );
 
   fastify.post(
     "/:roleId/permissions",
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.RolesPermission),
+        // fastify.permission(Permissions.RolesPermissionWrite),
       ],
     },
     async function (request, reply) {
       try {
         const { roleId } = request.params as { roleId: string };
-        const { permissionId } = request.body as {
-          permissionId: string;
+        const { permissionIdList } = request.body as {
+          permissionIdList: string[];
         };
+
+        const role = await prisma.role.findUnique({
+          where: {
+            id: roleId,
+          },
+          include: {
+            permissions: true,
+          },
+        }); 
+        
+        console.log(role);
+        const permissionIdListInRole = role?.permissions.map((permission) => {
+          return permission.id;
+        })
+
+        console.log(permissionIdListInRole);
+
+        // const permissionIdListNotInRole = permissionIdList.filter((permissionId) => {
+        //   return !permissionIdListInRole?.includes(permissionId);
+        // })
+
+        const permissionIdListNotInRole = permissionIdListInRole?.filter((permissionId) => {
+          return !permissionIdList.includes(permissionId);
+        }) ?? [];
+
+
+
+        console.log(permissionIdListNotInRole);
+
+        if (permissionIdListNotInRole.length > 0) {
+          await prisma.role.update({
+            where: {
+              id: roleId,
+            },
+            data: {
+              permissions: {
+                disconnect: permissionIdListNotInRole.map((id) => {
+                  return { id };
+                }),
+              },
+            },
+          });
+        }
+
         const data = await prisma.role.update({
           data: {
             permissions: {
-              connect: {
-                id: permissionId,
-              },
+              connect: permissionIdList.map((id) => {
+                return { id };
+              }),
             },
           },
           where: {
@@ -130,7 +238,7 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         });
         return reply.send({
           success: true,
-          message: "Permission added Successfully.",
+          message: "Permissions added Successfully.",
           data: data,
         } as ApiResponse<Role>);
       } catch (error) {
@@ -141,19 +249,20 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   );
 
   fastify.delete(
-    "/:roleId/permissions",
+    "/:roleId/:permissionId",
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.RolesPermissionDelete),
+        // fastify.permission(Permissions.RolesPermissionDelete),
       ],
     },
     async function (request, reply) {
       try {
-        const { roleId } = request.params as { roleId: string };
-        const { permissionId } = request.body as {
+        const { roleId, permissionId } = request.params as {
+          roleId: string;
           permissionId: string;
         };
+
         const data = await prisma.role.update({
           data: {
             permissions: {
@@ -183,7 +292,7 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.PermissionsRead),
+        // fastify.permission(Permissions.PermissionsRead),
       ],
     },
     async function (request, reply) {

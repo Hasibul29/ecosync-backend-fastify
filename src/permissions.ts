@@ -10,8 +10,10 @@ export enum Permissions {
   // Roles
   RolesRead = "roles:read",
   RolesWrite = "roles:write",
+  RolesUpdate = "roles:update",
   RolesDelete = "roles:delete",
-  RolesPermission = "roles_permission:write",
+  RolesPermissionRead = "roles_permission:read",
+  RolesPermissionWrite = "roles_permission:write",
   RolesPermissionDelete = "roles_permission:delete",
 
   // Permissions

@@ -225,7 +225,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.UsersDelete),
+        // fastify.permission(Permissions.UsersDelete),
       ],
     },
     async (request, reply) => {
