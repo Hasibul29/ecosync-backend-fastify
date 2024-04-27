@@ -41,13 +41,7 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       };
       const token = request.jwt.sign(payload);
 
-      reply.setCookie("access_token", token, {
-        path: "/",
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        maxAge: 24 * 60 * 60, //1 day
-      });
+      request.session.set('access_token', token);
 
       return reply.status(200).send({
         success: true,
@@ -73,14 +67,7 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
   fastify.post("/logout", async function (request, reply) {
     try {
-      reply.clearCookie("access_token", {
-        path: "/",
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        maxAge: 0,
-      });
-
+      request.session.delete();
       return reply.send({
         success: true,
         message: "Logout successful",

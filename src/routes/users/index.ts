@@ -78,7 +78,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.UsersWrite),
+        // fastify.permission(Permissions.UsersWrite),
       ],
     },
     async (request, reply) => {
@@ -154,29 +154,45 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.UsersEditOwn),
+        // fastify.permission(Permissions.UsersEditOwn),
       ],
     },
     async (request, reply) => {
       try {
-        const { id, firstName, lastName } = request.body as Partial<User>;
+        const { id, firstName, lastName, roleId } =
+          request.body as Partial<User>;
+
+        const user = await prisma.user.findUnique({
+          where: {
+            id: request.user.id,
+            role: {
+              permissions: {
+                some: {
+                  name: Permissions.UsersEditAll,
+                },
+              },
+            },
+          },
+        });
 
         if (id === undefined)
           return reply.status(400).send({
             success: false,
             message: "ID is required.",
           } as ApiResponse);
-
-        if (id !== request.user.id)
-          return reply.status(403).send({
-            success: false,
-            message: "Forbidden.",
-          } as ApiResponse);
-
         const updatedData: Partial<User> = {};
 
         if (firstName !== undefined) updatedData.firstName = firstName;
         if (lastName !== undefined) updatedData.lastName = lastName;
+        if (user) {
+          if (roleId !== undefined) updatedData.roleId = roleId;
+        }
+
+        if (id !== request.user.id && !user)
+          return reply.status(403).send({
+            success: false,
+            message: "Forbidden.",
+          } as ApiResponse);
 
         const data = await prisma.user.update({
           where: {
@@ -244,7 +260,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.UsersRoleReadAll),
+        // fastify.permission(Permissions.UsersRoleReadAll),
       ],
     },
     async (request, reply) => {

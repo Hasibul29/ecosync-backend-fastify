@@ -8,7 +8,6 @@ import {
   FastifyServerOptions,
 } from "fastify";
 import fjwt, { FastifyJWT } from "@fastify/jwt";
-import fCookie from "@fastify/cookie";
 import permissionMiddleware from "./middleware/permissionsMiddleware";
 import cors from "@fastify/cors";
 
@@ -24,7 +23,20 @@ const app: FastifyPluginAsync<AppOptions> = async (
 ): Promise<void> => {
   // Place here your custom code!
   const secret = fs.readFileSync(join(__dirname, "secret-key"));
-  fastify.register(fCookie, { secret });
+  fastify.register(require('@fastify/secure-session'), {
+    sessionName: 'session',
+    cookieName: 'session',
+    key: secret,
+    expiry: 24 * 60 * 60, // 1 day
+    cookie: { 
+      path: '/',
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: 24 * 60 * 60, // 1 day
+    }
+  })
+
   await fastify.register(cors, {
     origin: "http://localhost:5173",
     credentials: true,
@@ -41,19 +53,19 @@ const app: FastifyPluginAsync<AppOptions> = async (
   fastify.decorate(
     "authenticate",
     async (req: FastifyRequest, reply: FastifyReply) => {
-      const token = req.cookies.access_token;
+      const token = req.session.get("access_token");
+  
       if (!token) {
         return reply
-          .status(401)
+          .status(403)
           .send({ success: false, message: "Authentication required" });
       }
       try {
         const decoded = req.jwt.verify<FastifyJWT["user"]>(token);
         req.user = decoded;
-        return;
       } catch {
         return reply
-          .status(401)
+          .status(403)
           .send({ success: false, message: "Invalid or expired token" });
       }
     }
