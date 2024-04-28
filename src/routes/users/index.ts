@@ -17,7 +17,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.UsersRead),
+        // fastify.permission(Permissions.UsersRead),
       ],
     },
     async (request, reply) => {
@@ -45,7 +45,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.UsersReadOwn),
+        // fastify.permission(Permissions.UsersReadOwn),
       ],
     },
     async (request, reply) => {

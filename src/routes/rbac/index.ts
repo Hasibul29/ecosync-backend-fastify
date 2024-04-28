@@ -1,7 +1,7 @@
 import { FastifyPluginAsync } from "fastify";
 import prisma, { Role, Permission } from "../../utils/client";
 import { ApiResponse, errorResponse } from "../../constants/constants";
-import { Prisma } from "@prisma/client";
+import { Prisma, User } from "@prisma/client";
 import { Permissions } from "../../permissions";
 
 const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
@@ -190,24 +190,13 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           },
         }); 
         
-        console.log(role);
         const permissionIdListInRole = role?.permissions.map((permission) => {
           return permission.id;
         })
 
-        console.log(permissionIdListInRole);
-
-        // const permissionIdListNotInRole = permissionIdList.filter((permissionId) => {
-        //   return !permissionIdListInRole?.includes(permissionId);
-        // })
-
         const permissionIdListNotInRole = permissionIdListInRole?.filter((permissionId) => {
           return !permissionIdList.includes(permissionId);
         }) ?? [];
-
-
-
-        console.log(permissionIdListNotInRole);
 
         if (permissionIdListNotInRole.length > 0) {
           await prisma.role.update({
@@ -309,6 +298,39 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       }
     }
   );
+
+  fastify.get(
+    "/:roleId/users",
+    {
+      preHandler: [
+        fastify.authenticate,
+        // fastify.permission(Permissions.RolesUsersRead),
+      ],
+    }
+    ,
+    async function (request, reply) {
+      try {
+        const { roleId } = request.params as { roleId: string };
+        const data = await prisma.user.findMany({
+          where: {
+            role: {
+              id: {
+                equals: roleId,
+              }
+            },
+          },
+        });
+        return reply.send({
+          success: true,
+          message: "Users list.",
+          data: data,
+        } as ApiResponse<User[]>);
+      } catch (error) {
+        return reply.status(200).send(errorResponse);
+      }
+    }
+  )
+
 };
 
 export default rbac;
