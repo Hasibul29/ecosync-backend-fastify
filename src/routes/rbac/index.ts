@@ -23,7 +23,7 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         } as ApiResponse<Role[]>);
       } catch (error) {
         console.log("Roles", error);
-        return reply.status(200).send(errorResponse);
+        return reply.status(500).send(errorResponse);
       }
     }
   );
@@ -63,7 +63,7 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           }
         }
         console.log("Role add :", error);
-        return reply.status(200).send(errorResponse);
+        return reply.status(500).send(errorResponse);
       }
     }
   );
@@ -99,7 +99,7 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         } as ApiResponse<Role>);
       } catch (error) {
         console.log("Role add :", error);
-        return reply.status(200).send(errorResponse);
+        return reply.status(500).send(errorResponse);
       }
     }
   );
@@ -128,8 +128,16 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           data: data,
         } as ApiResponse<Role>);
       } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+          if (error.code === "P2003") {
+            return reply.status(404).send({
+              success: false,
+              message: "Role cannot be deleted. Associated users exist.",
+            } as ApiResponse);
+          }
+        }
         console.log("Role delete :", error);
-        return reply.status(200).send(errorResponse);
+        return reply.status(500).send(errorResponse);
       }
     }
   );
@@ -161,7 +169,7 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         } as ApiResponse<Permission[]>);
       } catch (error) {
         console.log("Permission get :", error);
-        return reply.status(200).send(errorResponse);
+        return reply.status(500).send(errorResponse);
       }
     }
   );
@@ -232,7 +240,7 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         } as ApiResponse<Role>);
       } catch (error) {
         console.log("Permission add :", error);
-        return reply.status(200).send(errorResponse);
+        return reply.status(500).send(errorResponse);
       }
     }
   );
@@ -271,7 +279,7 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         } as ApiResponse<Role>);
       } catch (error) {
         console.log("Permission delete :", error);
-        return reply.status(200).send(errorResponse);
+        return reply.status(500).send(errorResponse);
       }
     }
   );
@@ -294,7 +302,7 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         } as ApiResponse<Permission[]>);
       } catch (error) {
         console.log("Roles", error);
-        return reply.status(200).send(errorResponse);
+        return reply.status(500).send(errorResponse);
       }
     }
   );
@@ -326,7 +334,7 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           data: data,
         } as ApiResponse<User[]>);
       } catch (error) {
-        return reply.status(200).send(errorResponse);
+        return reply.status(500).send(errorResponse);
       }
     }
   )

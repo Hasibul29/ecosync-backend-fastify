@@ -80,11 +80,11 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
   fastify.post("/reset-password/initiate", async function (request, reply) {
     try {
-      const { id } = request.body as { id: string };
+      const { email } = request.body as { email: string };
 
       const data = await prisma.user.findUnique({
         where: {
-          id: id,
+          email: email,
         },
       });
       if (!data)
@@ -95,14 +95,14 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       const otp = generateOTP();
       const otpData = await prisma.oTP.findUnique({
         where: {
-          userId: id,
+          userId: data.id,
         },
       });
       if (!otpData) {
         await prisma.oTP.create({
           data: {
             code: otp,
-            userId: id,
+            userId: data.id,
             expiration: new Date(Date.now() + 5 * 60 * 1000), //5min
           },
         });
@@ -113,7 +113,7 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
             expiration: new Date(Date.now() + 5 * 60 * 1000), //5min
           },
           where: {
-            userId: id,
+            userId: data.id,
           },
         });
       }
@@ -145,18 +145,27 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
   fastify.post("/reset-password/confirm", async function (request, reply) {
     try {
-      const { newPassword, confirmPassword, id, otp, step } = request.body as {
+      const { newPassword, confirmPassword, email, otp, step } = request.body as {
         newPassword: string;
         confirmPassword: string;
-        id: string;
+        email: string;
         otp: string;
         step: "0" | "1";
       };
 
+      const user = await prisma.user.findUnique({
+        where: {
+          email: email,
+        },
+        select: {
+          id: true,
+        },
+      })
+
       if (step === "0") {
         const data = await prisma.oTP.findUnique({
           where: {
-            userId: id,
+            userId: user?.id,
           },
         });
         const currentTimestamp = new Date();
@@ -166,7 +175,7 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
             message: "Invalid OTP or OTP expired.",
           } as ApiResponse);
         }
-        return reply.send({
+        return reply.status(200).send({
           success: true,
           message: "OTP verified successfully.",
         } as ApiResponse);
@@ -183,13 +192,13 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
             passwordHash: passwordHash,
           },
           where: {
-            userId: id,
+            userId: user?.id,
           },
         });
 
         const data = await prisma.user.findUnique({
           where: {
-            id: id,
+            id: user?.id,
           },
         });
         const mailOptions = {
