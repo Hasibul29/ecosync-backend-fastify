@@ -4,7 +4,7 @@ import { ApiResponse, errorResponse } from "../../constants/constants";
 import { Prisma, Vehicle } from "@prisma/client";
 import { Permissions } from "../../permissions";
 
-const root: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
+const vehicle: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   fastify.get(
     "/",
     {
@@ -34,7 +34,7 @@ const root: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.VehiclesWrite),
+        fastify.permission(Permissions.VehiclesWrite),
       ],
     },
     async function (request, reply) {
@@ -81,7 +81,7 @@ const root: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.VehiclesUpdate),
+        fastify.permission(Permissions.VehiclesUpdate),
       ],
     },
     async function (request, reply) {
@@ -129,7 +129,7 @@ const root: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.VehiclesDelete),
+        fastify.permission(Permissions.VehiclesDelete),
       ],
     },
     async function (request, reply) {
@@ -163,4 +163,4 @@ const root: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   );
 };
 
-export default root;
+export default vehicle;

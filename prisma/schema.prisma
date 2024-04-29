@@ -70,7 +70,7 @@ model Vehicle {
 
 model STS {
   id        String    @id @default(uuid())
-  wardNo    String
+  wardNo    String @unique
   latitude  String
   longitude String
   capacity  Decimal

@@ -32,4 +32,16 @@ export enum Permissions {
   VehiclesDelete = "vehicles:delete",
   VehiclesUpdate = "vehicles:update",
 
+  // STS
+  STSRead = "sts:read",
+  STSWrite = "sts:write",
+  STSDelete = "sts:delete",
+  STSUpdate = "sts:update",
+  STSManagerWrite = "sts_manager:write",
+  STSVehicleWrite = "sts_vehicle:write",
+  STSVehicleRead = "sts_vehicle:read",
+  STSManagerRead = "sts_manager:read",
+  STSManagerDelete = "sts_manager:delete",
+  STSVehicleDelete = "sts_vehicle:delete",
+
 } 
