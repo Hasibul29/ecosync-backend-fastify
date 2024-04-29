@@ -137,7 +137,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
           if (error.code === "P2002") {
-            return reply.status(404).send({
+            return reply.status(400).send({
               success: false,
               message: "User already exist.",
             } as ApiResponse);

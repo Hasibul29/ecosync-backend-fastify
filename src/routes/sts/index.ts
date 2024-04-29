@@ -39,9 +39,11 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     },
     async function (request, reply) {
       try {
-        const { wardNo, capacity, latitude, longitude } = request.body as STS;
+        const { name, wardNo, capacity, latitude, longitude } =
+          request.body as STS;
         const data = await prisma.sTS.create({
           data: {
+            name: name,
             wardNo: wardNo,
             capacity: capacity,
             latitude: latitude,
@@ -57,7 +59,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
           if (error.code === "P2002") {
-            return reply.status(404).send({
+            return reply.status(400).send({
               success: false,
               message: "STS already exist.",
             } as ApiResponse);
@@ -80,8 +82,13 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     async function (request, reply) {
       try {
         const { stsId } = request.params as { stsId: string };
-        const { wardNo, capacity, latitude, longitude } = request.body as Partial<STS>;
+        const {name, wardNo, capacity, latitude, longitude } =
+          request.body as Partial<STS>;
         const updatedData: Partial<STS> = {};
+
+        if(name !== undefined) {
+          updatedData.name = name;
+        }
 
         if (wardNo !== undefined) {
           updatedData.wardNo = wardNo;
