@@ -2,7 +2,7 @@ import { FastifyPluginAsync } from "fastify";
 import prisma from "../../utils/client";
 import { ApiResponse, errorResponse } from "../../constants/constants";
 import { Prisma, STS, User, Vehicle } from "@prisma/client";
-import { Permissions } from "../../permissions";
+// import { Permissions } from "../../permissions";
 
 const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   fastify.get(
@@ -80,12 +80,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     async function (request, reply) {
       try {
         const { stsId } = request.params as { stsId: string };
-        const {
-          wardNo: wardNo,
-          capacity: capacity,
-          latitude: latitude,
-          longitude: longitude,
-        } = request.body as Partial<STS>;
+        const { wardNo, capacity, latitude, longitude } = request.body as Partial<STS>;
         const updatedData: Partial<STS> = {};
 
         if (wardNo !== undefined) {
@@ -242,20 +237,23 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     },
     async function (request, reply) {
       try {
-        const { stsId , vehicleId } = request.params as { stsId: string, vehicleId: string };
+        const { stsId, vehicleId } = request.params as {
+          stsId: string;
+          vehicleId: string;
+        };
 
         await prisma.sTS.update({
-            where: {
-              id: stsId,
-            },
-            data: {
-              Vehicle: {
-                disconnect: {
-                  id: vehicleId,
-                },
+          where: {
+            id: stsId,
+          },
+          data: {
+            Vehicle: {
+              disconnect: {
+                id: vehicleId,
               },
             },
-          });
+          },
+        });
 
         return reply.status(200).send({
           success: true,
@@ -345,20 +343,23 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     },
     async function (request, reply) {
       try {
-        const { stsId , userId } = request.params as { stsId: string, userId: string };
+        const { stsId, userId } = request.params as {
+          stsId: string;
+          userId: string;
+        };
 
         await prisma.sTS.update({
-            where: {
-              id: stsId,
-            },
-            data: {
-              User: {
-                disconnect: {
-                  id: userId,
-                },
+          where: {
+            id: stsId,
+          },
+          data: {
+            User: {
+              disconnect: {
+                id: userId,
               },
             },
-          });
+          },
+        });
 
         return reply.status(200).send({
           success: true,
@@ -370,7 +371,6 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       }
     }
   );
-
 };
 
 export default sts;

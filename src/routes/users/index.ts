@@ -154,7 +154,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.UsersUpdateOwn),
+        // fastify.permission(Permissions.UsersUpdateOwn),
       ],
     },
     async (request, reply) => {
@@ -188,11 +188,11 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           if (roleId !== undefined) updatedData.roleId = roleId;
         }
 
-        if (id !== request.user.id && !user)
-          return reply.status(403).send({
-            success: false,
-            message: "Forbidden.",
-          } as ApiResponse);
+        // if (id !== request.user.id && !user)
+        //   return reply.status(403).send({
+        //     success: false,
+        //     message: "Forbidden.",
+        //   } as ApiResponse);
 
         const data = await prisma.user.update({
           where: {
