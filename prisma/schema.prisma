@@ -22,13 +22,15 @@ model Auth {
 }
 
 model User {
-  id        String @id @default(uuid())
-  firstName String
-  lastName  String
-  email     String @unique
-  role      Role   @relation(fields: [roleId], references: [id])
-  roleId    String
-  password  Auth?
+  id         String  @id @default(uuid())
+  firstName  String
+  lastName   String
+  email      String  @unique
+  role       Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  roleId     String
+  password   Auth?
+  stsManager STS?    @relation(fields: [stsId], references: [id], onDelete: Cascade)
+  stsId      String?
 }
 
 model Role {
@@ -52,4 +54,26 @@ model OTP {
   expiration DateTime
   Auth       Auth     @relation(fields: [userId], references: [userId])
   userId     String   @unique
+}
+
+model Vehicle {
+  id               String  @id @default(uuid())
+  vehicleNumber    String  @unique
+  vehicleType      String
+  capacity         Decimal
+  fuelCostLoaded   Decimal
+  fuelCostUnloaded Decimal
+  onService        Boolean @default(true)
+  sts              STS?    @relation(fields: [stsId], references: [id], onDelete: Cascade)
+  stsId            String?
+}
+
+model STS {
+  id        String    @id @default(uuid())
+  wardNo    String
+  latitude  String
+  longitude String
+  capacity  Decimal
+  Vehicle   Vehicle[]
+  User      User[]
 }

@@ -154,7 +154,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.UsersEditOwn),
+        fastify.permission(Permissions.UsersUpdateOwn),
       ],
     },
     async (request, reply) => {
@@ -168,7 +168,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
             role: {
               permissions: {
                 some: {
-                  name: Permissions.UsersEditAll,
+                  name: Permissions.UsersUpdateOwn,
                 },
               },
             },

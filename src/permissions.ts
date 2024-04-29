@@ -4,8 +4,8 @@ export enum Permissions {
   UsersReadOwn = "users:read_own",
   UsersWrite = "users:write",
   UsersDelete = "users:delete",
-  UsersEditAll = "users:edit_all",
-  UsersEditOwn = "users:edit_own",
+  UsersUpdateAll = "users:update_all",
+  UsersUpdateOwn = "users:update_own",
 
   // Roles
   RolesRead = "roles:read",
@@ -25,4 +25,11 @@ export enum Permissions {
   UsersRolesWrite = "users_roles:write",
   UsersRoleReadAll = "users_roles:read_all",
   UsersRoleUpdate = "users_roles:update",
+
+  // Vehicles
+  VehiclesRead = "vehicles:read",
+  VehiclesWrite = "vehicles:write",
+  VehiclesDelete = "vehicles:delete",
+  VehiclesUpdate = "vehicles:update",
+
 } 

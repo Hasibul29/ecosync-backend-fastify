@@ -219,7 +219,7 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           message: "Password reset successful.",
         } as ApiResponse);
       } else {
-        return reply.status(400).send({
+        return reply.status(400).send({ 
           success: false,
           message: "Invalid request.",
         } as ApiResponse);
