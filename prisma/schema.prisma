@@ -26,10 +26,10 @@ model User {
   firstName  String
   lastName   String
   email      String  @unique
-  role       Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  role       Role    @relation(fields: [roleId], references: [id], onDelete: Restrict)
   roleId     String
   password   Auth?
-  stsManager STS?    @relation(fields: [stsId], references: [id], onDelete: Cascade)
+  stsManager STS?    @relation(fields: [stsId], references: [id], onDelete: SetNull)
   stsId      String?
 }
 
@@ -64,7 +64,7 @@ model Vehicle {
   fuelCostLoaded   Decimal
   fuelCostUnloaded Decimal
   onService        Boolean @default(true)
-  sts              STS?    @relation(fields: [stsId], references: [id], onDelete: Cascade)
+  sts              STS?    @relation(fields: [stsId], references: [id], onDelete: SetNull)
   stsId            String?
 }
 
@@ -75,6 +75,6 @@ model STS {
   latitude  String
   longitude String
   capacity  Decimal
-  Vehicle   Vehicle[]
+  Vehicle   Vehicle[] 
   User      User[]
 }

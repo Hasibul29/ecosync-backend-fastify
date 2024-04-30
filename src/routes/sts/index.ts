@@ -287,6 +287,16 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           stsId: string;
           userId: string;
         };
+
+        const user = await prisma.user.findUnique({
+          where: {
+            id: userId,
+          },
+        });
+        if(user?.stsId !== undefined) {
+          console.log("User not available");
+        }
+
         await prisma.sTS.update({
           where: {
             id: stsId,

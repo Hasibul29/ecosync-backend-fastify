@@ -2,7 +2,7 @@ import { FastifyPluginAsync } from "fastify";
 import prisma from "../../utils/client";
 import { ApiResponse, errorResponse } from "../../constants/constants";
 import { Prisma, Vehicle } from "@prisma/client";
-import { Permissions } from "../../permissions";
+// import { Permissions } from "../../permissions";
 
 const vehicle: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   fastify.get(
@@ -15,7 +15,17 @@ const vehicle: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     },
     async function (request, reply) {
       try {
-        const data = await prisma.vehicle.findMany({});
+        const { filter } = request.query as { filter?: string };
+
+        let whereCondition = {};
+
+        if (filter === "1") {
+          whereCondition = { stsId: { equals : null } };
+        }
+        console.log(whereCondition)
+        const data = await prisma.vehicle.findMany({
+          where: whereCondition,
+        });
 
         return reply.status(200).send({
           success: true,
@@ -34,7 +44,7 @@ const vehicle: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.VehiclesWrite),
+        // fastify.permission(Permissions.VehiclesWrite),
       ],
     },
     async function (request, reply) {
@@ -81,12 +91,11 @@ const vehicle: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.VehiclesUpdate),
+        // fastify.permission(Permissions.VehiclesUpdate),
       ],
     },
     async function (request, reply) {
       try {
-        
         const { vehicleId } = request.params as { vehicleId: string };
         const { fuelCostLoaded, fuelCostUnloaded } =
           request.body as Partial<Vehicle>;
@@ -129,7 +138,7 @@ const vehicle: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.VehiclesDelete),
+        // fastify.permission(Permissions.VehiclesDelete),
       ],
     },
     async function (request, reply) {
@@ -146,7 +155,6 @@ const vehicle: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           success: true,
           message: "Vehicle Deleted.",
         } as ApiResponse);
-
       } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
           if (error.code === "P2025") {
