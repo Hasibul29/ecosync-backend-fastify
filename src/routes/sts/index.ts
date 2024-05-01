@@ -410,7 +410,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   );
 
   fastify.post(
-    "/entry/:stsId",
+    "/entry/:userId",
     {
       preHandler: [
         fastify.authenticate,
@@ -419,12 +419,28 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     },
     async function (request, reply) {
       try {
-        const { stsId } = request.params as { stsId: string };
+        const { userId } = request.params as { userId: string };
 
         const { arrivalTime, wasteVolume, departureTime } =
           request.body as STSEntry;
-        const {vehicleNumber} = request.body as Vehicle;
+        const { vehicleNumber } = request.body as Vehicle;
 
+        const user = await prisma.user.findUnique({
+          where: {
+            id: userId,
+          },
+          include: {
+            role: true,
+          }
+        });
+
+        if (user?.stsId === null) {
+          return reply.status(400).send({
+            success: false,
+            message: "User is not assigned to any STS.",
+          });
+        }
+        
         const data = await prisma.sTSEntry.create({
           data: {
             arrivalTime: new Date(arrivalTime),
@@ -432,8 +448,8 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
             wasteVolume: wasteVolume,
             sts: {
               connect: {
-                id: stsId,
-              }
+                id: user?.stsId,
+              },
             },
             vehicle: {
               connect: {
@@ -455,7 +471,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   );
 
   fastify.get(
-    "/entry/:stsId",
+    "/entry/:userId",
     {
       preHandler: [
         fastify.authenticate,
@@ -464,15 +480,38 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     },
     async function (request, reply) {
       try {
-        const { stsId } = request.params as { stsId: string };
+        const { userId } = request.params as { userId: string };
 
-        const data = await prisma.sTSEntry.findMany({
+        const user = await prisma.user.findUnique({
           where: {
-            stsId: stsId,
+            id: userId,
           },
           include: {
-            vehicle:true
+            role: true,
           }
+        });
+
+        if (user?.stsId === null && user.role.name !== "Admin") {
+          return reply.status(400).send({
+            success: false,
+            message: "User is not assigned to any STS.",
+          });
+        }
+
+        let whereCondition = {};
+
+        if(user?.stsId !== null) {
+          whereCondition = {
+            stsId: user?.stsId
+          }
+        }
+
+        const data = await prisma.sTSEntry.findMany({
+          where: whereCondition,
+          include: {
+            vehicle: true,
+            sts: true,
+          },
         });
 
         return reply.status(200).send({
@@ -495,7 +534,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   //     preHandler: [
   //       fastify.authenticate,
   //       // fastify.permission(Permissions.STSManagerDelete),
-  //     ],  
+  //     ],
   //   },
   //   async function (request, reply) {
   //     try {
@@ -521,7 +560,6 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   //     }
   //   }
   // );
-
 };
 
 export default sts;
