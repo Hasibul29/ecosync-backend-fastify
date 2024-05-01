@@ -336,6 +336,9 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           where: {
             stsId: stsId,
           },
+          include: {
+            role: true,
+          }
         });
         data;
         return reply.status(200).send({

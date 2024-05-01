@@ -22,10 +22,24 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     },
     async (request, reply) => {
       try {
+        const { filter } = request.query as { filter?: string };
+
+        let whereCondition = {};
+
+        if (filter === "sts") {
+          whereCondition = {
+            stsId: { equals: null },
+            role: {
+              name: "STS Manager",
+            },
+          };
+        }
+
         const data = await prisma.user.findMany({
           include: {
             role: true,
           },
+          where: whereCondition,
         });
 
         return reply.status(200).send({

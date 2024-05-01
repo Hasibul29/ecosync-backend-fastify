@@ -19,7 +19,7 @@ const vehicle: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
         let whereCondition = {};
 
-        if (filter === "1") {
+        if (filter === "sts") {
           whereCondition = { stsId: { equals : null } };
         }
         console.log(whereCondition)
