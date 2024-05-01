@@ -22,15 +22,17 @@ model Auth {
 }
 
 model User {
-  id         String  @id @default(uuid())
-  firstName  String
-  lastName   String
-  email      String  @unique
-  role       Role    @relation(fields: [roleId], references: [id], onDelete: Restrict)
-  roleId     String
-  password   Auth?
-  stsManager STS?    @relation(fields: [stsId], references: [id], onDelete: SetNull)
-  stsId      String?
+  id              String    @id @default(uuid())
+  firstName       String
+  lastName        String
+  email           String    @unique
+  role            Role      @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  roleId          String
+  password        Auth?
+  stsManager      STS?      @relation(fields: [stsId], references: [id], onDelete: SetNull)
+  stsId           String?
+  landfillManager Landfill? @relation(fields: [landfillId], references: [id])
+  landfillId      String?
 }
 
 model Role {
@@ -71,10 +73,20 @@ model Vehicle {
 model STS {
   id        String    @id @default(uuid())
   name      String
-  wardNo    String @unique
+  wardNo    String    @unique
   latitude  String
   longitude String
   capacity  Decimal
-  Vehicle   Vehicle[] 
+  Vehicle   Vehicle[]
   User      User[]
+}
+
+model Landfill {
+  id                  String  @id @default(uuid())
+  name                String
+  latitude            String
+  longitude           String
+  capacity            Decimal
+  operationalTimespan String
+  User                User[]
 }

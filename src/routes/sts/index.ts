@@ -181,6 +181,20 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           stsId: string;
           vehicleId: string;
         };
+
+        const vehicle = await prisma.vehicle.findUnique({
+          where: {
+            id: vehicleId,
+          },
+        });
+
+        if (vehicle?.stsId !== undefined) {
+          return reply.status(400).send({
+            success: false,
+            message: "Vehicle already added to another STS.",
+          } as ApiResponse);
+        }
+
         await prisma.sTS.update({
           where: {
             id: stsId,
@@ -294,7 +308,10 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           },
         });
         if(user?.stsId !== undefined) {
-          console.log("User not available");
+          return reply.status(400).send({
+            success: false,
+            message: "Manager already added to another STS.",
+          } as ApiResponse);
         }
 
         await prisma.sTS.update({
