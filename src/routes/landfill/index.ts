@@ -187,7 +187,7 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           },
         });
 
-        if(user?.landfillId !== undefined) {
+        if(user?.landfillId !== null) {
           return reply.status(400).send({
             success: true,
             message: "Manager Already Added to another Landfill.",

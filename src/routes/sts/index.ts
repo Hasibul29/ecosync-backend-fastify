@@ -188,7 +188,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           },
         });
 
-        if (vehicle?.stsId !== undefined) {
+        if (vehicle?.stsId !== null) {
           return reply.status(400).send({
             success: false,
             message: "Vehicle already added to another STS.",
@@ -307,7 +307,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
             id: userId,
           },
         });
-        if(user?.stsId !== undefined) {
+        if(user?.stsId !== null) {
           return reply.status(400).send({
             success: false,
             message: "Manager already added to another STS.",
