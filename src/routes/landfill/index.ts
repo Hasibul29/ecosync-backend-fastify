@@ -1,7 +1,7 @@
 import { FastifyPluginAsync } from "fastify";
 import prisma from "../../utils/client";
 import { ApiResponse, errorResponse } from "../../constants/constants";
-import { Landfill, Prisma, User } from "@prisma/client";
+import { Landfill, LandfillEntry, Prisma, User, Vehicle } from "@prisma/client";
 import { Permissions } from "../../permissions";
 
 const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
@@ -288,6 +288,85 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       }
     }
   );
+  
+  fastify.post(
+    "/entry/:landfillId",
+    {
+      preHandler: [
+        fastify.authenticate,
+        // fastify.permission(Permissions.LandfillEntryWrite),
+      ],
+    },
+    async function (request, reply) {
+      try {
+        const { landfillId } = request.params as { landfillId: string };
+
+        const { arrivalTime, wasteVolume, departureTime } =
+          request.body as LandfillEntry;
+        const {vehicleNumber} = request.body as Vehicle;
+
+        const data = await prisma.landfillEntry.create({
+          data: {
+            arrivalTime: new Date(arrivalTime),
+            departureTime: new Date(departureTime),
+            wasteVolume: wasteVolume,
+            landfill: {
+              connect: {
+                id: landfillId,
+              }
+            },
+            vehicle: {
+              connect: {
+                vehicleNumber: vehicleNumber,
+              },
+            },
+          },
+        });
+        return reply.status(200).send({
+          success: true,
+          message: "landFill Entry Created.",
+          data: data,
+        } as ApiResponse<LandfillEntry>);
+      } catch (error) {
+        console.log("Create Landfill Entry:", error);
+        return reply.status(500).send(errorResponse);
+      }
+    }
+  );
+
+  fastify.get(
+    "/entry/:landfillId",
+    {
+      preHandler: [
+        fastify.authenticate,
+        // fastify.permission(Permissions.LandfillEntryRead),
+      ],
+    },
+    async function (request, reply) {
+      try {
+        const { landfillId } = request.params as { landfillId: string };
+
+        const data = await prisma.landfillEntry.findMany({
+          where: {
+            landfillId: landfillId,
+          },
+          include: {
+            vehicle:true
+          }
+        });
+
+        return reply.status(200).send({
+          success: true,
+          message: "Landfill Entry List.",
+          data: data,
+        } as ApiResponse<LandfillEntry[]>);
+      } catch (error) {
+        console.log("Get Landfill Entry:", error);
+        return reply.status(500).send(errorResponse);
+      }
+    }
+  );
+
 };
 
 export default landfill;

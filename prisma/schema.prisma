@@ -59,34 +59,60 @@ model OTP {
 }
 
 model Vehicle {
-  id               String  @id @default(uuid())
-  vehicleNumber    String  @unique
+  id               String          @id @default(uuid())
+  vehicleNumber    String          @unique
   vehicleType      String
   capacity         Decimal
   fuelCostLoaded   Decimal
   fuelCostUnloaded Decimal
-  onService        Boolean @default(true)
-  sts              STS?    @relation(fields: [stsId], references: [id], onDelete: SetNull)
+  onService        Boolean         @default(true)
+  sts              STS?            @relation(fields: [stsId], references: [id], onDelete: SetNull)
   stsId            String?
+  STSEntry         STSEntry[]
+  LandfillEntry    LandfillEntry[]
 }
 
 model STS {
-  id        String    @id @default(uuid())
+  id        String     @id @default(uuid())
   name      String
-  wardNo    String    @unique
+  wardNo    String     @unique
   latitude  String
   longitude String
   capacity  Decimal
   Vehicle   Vehicle[]
   User      User[]
+  STSEntry  STSEntry[]
 }
 
 model Landfill {
-  id                  String  @id @default(uuid())
+  id                  String          @id @default(uuid())
   name                String
   latitude            String
   longitude           String
   capacity            Decimal
   operationalTimespan String
   User                User[]
+  LandfillEntry       LandfillEntry[]
+}
+
+model STSEntry {
+  id            String   @id @default(uuid())
+  sts           STS      @relation(fields: [stsId], references: [id])
+  stsId         String
+  vehicle       Vehicle  @relation(fields: [vehicleId], references: [id])
+  vehicleId     String
+  wasteVolume   Decimal
+  arrivalTime   DateTime
+  departureTime DateTime
+}
+
+model LandfillEntry {
+  id            String   @id @default(uuid())
+  landfill      Landfill @relation(fields: [landfillId], references: [id])
+  landfillId    String
+  vehicle       Vehicle  @relation(fields: [vehicleId], references: [id])
+  vehicleId     String
+  wasteVolume   Decimal
+  arrivalTime   DateTime
+  departureTime DateTime
 }

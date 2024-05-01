@@ -1,7 +1,7 @@
 import { FastifyPluginAsync } from "fastify";
 import prisma from "../../utils/client";
 import { ApiResponse, errorResponse } from "../../constants/constants";
-import { Prisma, STS, User, Vehicle } from "@prisma/client";
+import { Prisma, STS, STSEntry, User, Vehicle } from "@prisma/client";
 // import { Permissions } from "../../permissions";
 
 const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
@@ -82,11 +82,11 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     async function (request, reply) {
       try {
         const { stsId } = request.params as { stsId: string };
-        const {name, wardNo, capacity, latitude, longitude } =
+        const { name, wardNo, capacity, latitude, longitude } =
           request.body as Partial<STS>;
         const updatedData: Partial<STS> = {};
 
-        if(name !== undefined) {
+        if (name !== undefined) {
           updatedData.name = name;
         }
 
@@ -307,7 +307,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
             id: userId,
           },
         });
-        if(user?.stsId !== null) {
+        if (user?.stsId !== null) {
           return reply.status(400).send({
             success: false,
             message: "Manager already added to another STS.",
@@ -355,7 +355,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           },
           include: {
             role: true,
-          }
+          },
         });
         data;
         return reply.status(200).send({
@@ -408,6 +408,120 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       }
     }
   );
+
+  fastify.post(
+    "/entry/:stsId",
+    {
+      preHandler: [
+        fastify.authenticate,
+        // fastify.permission(Permissions.STSEntryWrite),
+      ],
+    },
+    async function (request, reply) {
+      try {
+        const { stsId } = request.params as { stsId: string };
+
+        const { arrivalTime, wasteVolume, departureTime } =
+          request.body as STSEntry;
+        const {vehicleNumber} = request.body as Vehicle;
+
+        const data = await prisma.sTSEntry.create({
+          data: {
+            arrivalTime: new Date(arrivalTime),
+            departureTime: new Date(departureTime),
+            wasteVolume: wasteVolume,
+            sts: {
+              connect: {
+                id: stsId,
+              }
+            },
+            vehicle: {
+              connect: {
+                vehicleNumber: vehicleNumber,
+              },
+            },
+          },
+        });
+        return reply.status(200).send({
+          success: true,
+          message: "STS Entry Created.",
+          data: data,
+        } as ApiResponse<STSEntry>);
+      } catch (error) {
+        console.log("Create STS Entry:", error);
+        return reply.status(500).send(errorResponse);
+      }
+    }
+  );
+
+  fastify.get(
+    "/entry/:stsId",
+    {
+      preHandler: [
+        fastify.authenticate,
+        // fastify.permission(Permissions.STSEntryRead),
+      ],
+    },
+    async function (request, reply) {
+      try {
+        const { stsId } = request.params as { stsId: string };
+
+        const data = await prisma.sTSEntry.findMany({
+          where: {
+            stsId: stsId,
+          },
+          include: {
+            vehicle:true
+          }
+        });
+
+        return reply.status(200).send({
+          success: true,
+          message: "STS Entry List.",
+          data: data,
+        } as ApiResponse<STSEntry[]>);
+      } catch (error) {
+        console.log("Get STS Entry:", error);
+        return reply.status(500).send(errorResponse);
+      }
+    }
+  );
+
+  //  update required
+
+  // fastify.delete(
+  //   "/entry/:entryId",
+  //   {
+  //     preHandler: [
+  //       fastify.authenticate,
+  //       // fastify.permission(Permissions.STSManagerDelete),
+  //     ],  
+  //   },
+  //   async function (request, reply) {
+  //     try {
+  //       const { stsId, entryId } = request.params as {
+  //         stsId: string;
+  //         entryId: string;
+  //       };
+
+  //       await prisma.sTSEntry.delete({
+  //         where: {
+  //           id: entryId,
+  //         },
+  //       });
+
+  //       return reply.status(200).send({
+  //         success: true,
+  //         message: "STS Entry Deleted.",
+  //       } as ApiResponse);
+
+  //     } catch (error) {
+  //       console.log("Delete STS Entry:", error);
+  //       return reply.status(500).send(errorResponse);
+  //     }
+  //   }
+  // );
+
 };
 
 export default sts;

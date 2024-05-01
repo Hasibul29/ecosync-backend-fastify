@@ -43,6 +43,8 @@ export enum Permissions {
   STSManagerRead = "sts_manager:read",
   STSManagerDelete = "sts_manager:delete",
   STSVehicleDelete = "sts_vehicle:delete",
+  STSEntryRead = "sts_entry:read",
+  STSEntryWrite = "sts_entry:write",
 
   // Landfill
   LandfillRead = "landfill:read",
@@ -52,4 +54,7 @@ export enum Permissions {
   LandfillManagerWrite = "landfill_manager:write",
   LandfillManagerRead = "landfill_manager:read",
   LandfillManagerDelete = "landfill_manager:delete",
+  LandfillEntryRead = "landfill_entry:read",
+  LandfillEntryWrite = "landfill_entry:write",
+
 } 
