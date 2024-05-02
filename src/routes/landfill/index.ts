@@ -10,7 +10,7 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // //fastify.permission(Permissions.LandfillRead),
+        // //// fastify.permission(Permissions.LandfillRead),
       ],
     },
     async function (request, reply) {
@@ -76,7 +76,7 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        //fastify.permission(Permissions.LandfillUpdate),
+        // fastify.permission(Permissions.LandfillUpdate),
       ],
     },
     async function (request, reply) {
@@ -134,7 +134,7 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        //fastify.permission(Permissions.LandfillDelete),
+        // fastify.permission(Permissions.LandfillDelete),
       ],
     },
     async function (request, reply) {
@@ -171,7 +171,7 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // //fastify.permission(Permissions.LandfillManagerWrite),
+        // fastify.permission(Permissions.LandfillManagerWrite),
       ],
     },
     async function (request, reply) {
@@ -222,7 +222,7 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // //fastify.permission(Permissions.LandfillManagerRead),
+        // fastify.permission(Permissions.LandfillManagerRead),
       ],
     },
     async function (request, reply) {
@@ -290,7 +290,7 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   );
   
   fastify.post(
-    "/entry/:landfillId",
+    "/entry/:userId",
     {
       preHandler: [
         fastify.authenticate,
@@ -299,12 +299,28 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     },
     async function (request, reply) {
       try {
-        const { landfillId } = request.params as { landfillId: string };
+        const { userId } = request.params as { userId: string };
 
         const { arrivalTime, wasteVolume, departureTime } =
           request.body as LandfillEntry;
-        const {vehicleNumber} = request.body as Vehicle;
+        const { vehicleNumber } = request.body as Vehicle;
 
+        const user = await prisma.user.findUnique({
+          where: {
+            id: userId,
+          },
+          include: {
+            role: true,
+          }
+        });
+
+        if (user?.landfillId === null) {
+          return reply.status(400).send({
+            success: false,
+            message: "User is not assigned to any Landfill.",
+          });
+        }
+        
         const data = await prisma.landfillEntry.create({
           data: {
             arrivalTime: new Date(arrivalTime),
@@ -312,8 +328,8 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
             wasteVolume: wasteVolume,
             landfill: {
               connect: {
-                id: landfillId,
-              }
+                id: user?.landfillId,
+              },
             },
             vehicle: {
               connect: {
@@ -324,7 +340,7 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         });
         return reply.status(200).send({
           success: true,
-          message: "landFill Entry Created.",
+          message: "Landfill Entry Created.",
           data: data,
         } as ApiResponse<LandfillEntry>);
       } catch (error) {
@@ -335,7 +351,7 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   );
 
   fastify.get(
-    "/entry/:landfillId",
+    "/entry/:userId",
     {
       preHandler: [
         fastify.authenticate,
@@ -344,15 +360,38 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     },
     async function (request, reply) {
       try {
-        const { landfillId } = request.params as { landfillId: string };
+        const { userId } = request.params as { userId: string };
 
-        const data = await prisma.landfillEntry.findMany({
+        const user = await prisma.user.findUnique({
           where: {
-            landfillId: landfillId,
+            id: userId,
           },
           include: {
-            vehicle:true
+            role: true,
           }
+        });
+
+        if (user?.lastName === null && user.role.name !== "Admin") {
+          return reply.status(400).send({
+            success: false,
+            message: "User is not assigned to any Landfill.",
+          });
+        }
+
+        let whereCondition = {};
+
+        if(user?.landfillId !== null) {
+          whereCondition = {
+            landfillId: user?.landfillId
+          }
+        }
+
+        const data = await prisma.landfillEntry.findMany({
+          where: whereCondition,
+          include: {
+            vehicle: true,
+            landfill: true,
+          },
         });
 
         return reply.status(200).send({
