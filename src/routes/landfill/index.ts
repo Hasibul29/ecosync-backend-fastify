@@ -10,7 +10,7 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.LandfillRead),
+        // //// fastify.permission(Permissions.LandfillRead),
       ],
     },
     async function (request, reply) {
@@ -34,7 +34,7 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.LandfillWrite),
+        //fastify.permission(Permissions.LandfillWrite),
       ],
     },
     async function (request, reply) {
@@ -255,7 +255,7 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.LandfillManagerDelete),
+        // //fastify.permission(Permissions.LandfillManagerDelete),
       ],
     },
     async function (request, reply) {
@@ -294,7 +294,7 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.LandfillEntryWrite),
+        // //fastify.permission(Permissions.LandfillEntryWrite),
       ],
     },
     async function (request, reply) {
@@ -355,7 +355,7 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.STSEntryRead),
+        // //fastify.permission(Permissions.LandfillEntryRead),
       ],
     },
     async function (request, reply) {
