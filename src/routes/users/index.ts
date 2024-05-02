@@ -34,6 +34,14 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
             },
           };
         }
+        if (filter === "landfill") {
+          whereCondition = {
+            landfillId: { equals: null },
+            role: {
+              name: "Landfill Manager",
+            },
+          };
+        }
 
         const data = await prisma.user.findMany({
           include: {

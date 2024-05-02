@@ -33,7 +33,7 @@ const rbac: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        fastify.permission(Permissions.RolesWrite),
+        // fastify.permission(Permissions.RolesWrite),
       ],
     },
     async function (request, reply) {

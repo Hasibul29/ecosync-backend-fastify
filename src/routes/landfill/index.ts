@@ -2,7 +2,7 @@ import { FastifyPluginAsync } from "fastify";
 import prisma from "../../utils/client";
 import { ApiResponse, errorResponse } from "../../constants/constants";
 import { Landfill, LandfillEntry, Prisma, User, Vehicle } from "@prisma/client";
-import { Permissions } from "../../permissions";
+// import { Permissions } from "../../permissions";
 
 const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   fastify.get(
