@@ -1,11 +1,9 @@
 export enum Permissions {
   // Users
   UsersRead = "users:read",
-  UsersReadOwn = "users:read_own",
   UsersWrite = "users:write",
   UsersDelete = "users:delete",
-  UsersUpdateAll = "users:update_all",
-  UsersUpdateOwn = "users:update_own",
+  UsersUpdate = "users:update",
 
   // Roles
   RolesRead = "roles:read",
@@ -56,5 +54,9 @@ export enum Permissions {
   LandfillManagerDelete = "landfill_manager:delete",
   LandfillEntryRead = "landfill_entry:read",
   LandfillEntryWrite = "landfill_entry:write",
+
+  // Profile
+  ProfileRead = "profile:read",
+  ProfileUpdate = "profile:update",
 
 } 

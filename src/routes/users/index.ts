@@ -54,39 +54,6 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     }
   );
 
-  fastify.get(
-    "/:id",
-    {
-      preHandler: [
-        fastify.authenticate,
-        // fastify.permission(Permissions.UsersReadOwn),
-      ],
-    },
-    async (request, reply) => {
-      try {
-        const { id } = request.params as { id: string };
-
-        const data = await prisma.user.findUnique({
-          include: {
-            role: true,
-          },
-          where: {
-            id: id,
-          },
-        });
-
-        return reply.status(200).send({
-          success: true,
-          message: "User Data.",
-          data: data,
-        } as ApiResponse<User>);
-      } catch (error) {
-        console.log("Get User Data:", error);
-        return reply.status(500).send(errorResponse);
-      }
-    }
-  );
-
   fastify.post(
     "/",
     {
@@ -168,7 +135,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.UsersUpdateOwn),
+        // fastify.permission(Permissions.UsersUpdate),
       ],
     },
     async (request, reply) => {
@@ -176,37 +143,11 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         const { id, firstName, lastName, roleId } =
           request.body as Partial<User>;
 
-        const user = await prisma.user.findUnique({
-          where: {
-            id: request.user.id,
-            role: {
-              permissions: {
-                some: {
-                  name: Permissions.UsersUpdateOwn,
-                },
-              },
-            },
-          },
-        });
-
-        if (id === undefined)
-          return reply.status(400).send({
-            success: false,
-            message: "ID is required.",
-          } as ApiResponse);
         const updatedData: Partial<User> = {};
 
         if (firstName !== undefined) updatedData.firstName = firstName;
         if (lastName !== undefined) updatedData.lastName = lastName;
-        if (user) {
-          if (roleId !== undefined) updatedData.roleId = roleId;
-        }
-
-        // if (id !== request.user.id && !user)
-        //   return reply.status(403).send({
-        //     success: false,
-        //     message: "Forbidden.",
-        //   } as ApiResponse);
+        if (roleId !== undefined) updatedData.roleId = roleId;
 
         const data = await prisma.user.update({
           where: {
