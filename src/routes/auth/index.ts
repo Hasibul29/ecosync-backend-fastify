@@ -4,6 +4,7 @@ import { hash, compare } from "../../utils/hashing";
 import { ApiResponse, errorResponse } from "../../constants/constants";
 import transporter from "../../utils/mailSender";
 import {
+  changePassword,
   passwordResetConfirm,
   resetPassword,
 } from "../../utils/accountCreateEmail";
@@ -22,6 +23,7 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         },
         include: {
           password: true,
+          role: true,
         },
       });
       console.log(user);
@@ -41,12 +43,14 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       };
       const token = request.jwt.sign(payload);
 
-      request.session.set('access_token', token);
+      request.session.set("access_token", token);
+
+      const data = { ...user, password: undefined };
 
       return reply.status(200).send({
         success: true,
         message: "Login Successful",
-        data: user,
+        data: data,
       } as ApiResponse<User>);
     } catch (error) {
       console.log("Login", error);
@@ -145,13 +149,14 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
   fastify.post("/reset-password/confirm", async function (request, reply) {
     try {
-      const { newPassword, confirmPassword, email, otp, step } = request.body as {
-        newPassword: string;
-        confirmPassword: string;
-        email: string;
-        otp: string;
-        step: "0" | "1";
-      };
+      const { newPassword, confirmPassword, email, otp, step } =
+        request.body as {
+          newPassword: string;
+          confirmPassword: string;
+          email: string;
+          otp: string;
+          step: "0" | "1";
+        };
 
       const user = await prisma.user.findUnique({
         where: {
@@ -160,7 +165,7 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         select: {
           id: true,
         },
-      })
+      });
 
       if (step === "0") {
         const data = await prisma.oTP.findUnique({
@@ -219,13 +224,65 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           message: "Password reset successful.",
         } as ApiResponse);
       } else {
-        return reply.status(400).send({ 
+        return reply.status(400).send({
           success: false,
           message: "Invalid request.",
         } as ApiResponse);
       }
     } catch (error) {
       console.log("Reset confirm", error);
+      return reply.status(500).send(errorResponse);
+    }
+  });
+
+  fastify.post("/change-password/:userId", async function (request, reply) {
+    try {
+      const { userId } = request.params as { userId: string };
+      const { newPassword, confirmPassword } = request.body as {
+        newPassword: string;
+        confirmPassword: string;
+      };
+
+      if (newPassword !== confirmPassword) {
+        return reply.status(400).send({
+          success: false,
+          message: "Password didn't match.",
+        } as ApiResponse);
+      }
+      const passwordHash = await hash(newPassword);
+      await prisma.auth.update({
+        data: {
+          passwordHash: passwordHash,
+        },
+        where: {
+          userId: userId,
+        },
+      });
+
+      const data = await prisma.user.findUnique({
+        where: {
+          id: userId,
+        },
+      });
+      const mailOptions = {
+        from: {
+          name: "EcoSync",
+          address: process.env.SENDER_EMAIL || "",
+        },
+        to: data?.email,
+        subject: "Password change Successful.",
+        html: changePassword({
+          name: `${data?.firstName} ${data?.lastName}`,
+        }),
+      };
+
+      transporter.sendMail(mailOptions);
+      return reply.status(200).send({
+        success: true,
+        message: "Password change successful.",
+      } as ApiResponse);
+    } catch (error) {
+      console.log("change password", error);
       return reply.status(500).send(errorResponse);
     }
   });
