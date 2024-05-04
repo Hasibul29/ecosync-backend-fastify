@@ -206,4 +206,60 @@ const passwordResetConfirm = (userData: { name: string }) => `<!DOCTYPE html>
 </html>
 `;
 
-export { accountRegistration, resetPassword, passwordResetConfirm };
+const changePassword = (userData: { name: string }) => `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Change Successful</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+        }
+        .content {
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px 20px;
+            font-size: 0.8em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>Password Reset Successful</h1>
+        </div>
+        <div class="content">
+            <p>Hi ${userData.name},</p>
+            <p>Your password has been changed for your EcoSync account.</p>
+            <p>If you didn't request this change, please contact us immediately.</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2024 EcoSync. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
+`;
+
+export { accountRegistration, resetPassword, passwordResetConfirm , changePassword};
