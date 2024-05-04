@@ -558,7 +558,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           // oil cost minimal
           // waste transfer maximal
 
-          const sts = await prisma.sTS.findUnique({
+          const wasteVolume = await prisma.sTS.findUnique({
             where: {
               id: stsId
             },
@@ -569,7 +569,8 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
 
 
-          data = optimize(vehicle, distance);
+          data = optimize(vehicle, distance,wasteVolume);
+          
         }
 
 
@@ -586,40 +587,10 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     }
   );
 
-  //  update required
+  function optimize(vehicle: Vehicle[], distance: string, wasteVolume: number) {
+    //
 
-  // fastify.delete(
-  //   "/entry/:entryId",
-  //   {
-  //     preHandler: [
-  //       fastify.authenticate,
-  //       // fastify.permission(Permissions.STSManagerDelete),
-  //     ],
-  //   },
-  //   async function (request, reply) {
-  //     try {
-  //       const { stsId, entryId } = request.params as {
-  //         stsId: string;
-  //         entryId: string;
-  //       };
-
-  //       await prisma.sTSEntry.delete({
-  //         where: {
-  //           id: entryId,
-  //         },
-  //       });
-
-  //       return reply.status(200).send({
-  //         success: true,
-  //         message: "STS Entry Deleted.",
-  //       } as ApiResponse);
-
-  //     } catch (error) {
-  //       console.log("Delete STS Entry:", error);
-  //       return reply.status(500).send(errorResponse);
-  //     }
-  //   }
-  // );
+  }
 };
 
 export default sts;
