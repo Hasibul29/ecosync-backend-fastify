@@ -235,7 +235,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
             stsId: stsId,
           },
         });
-        data;
+
         return reply.status(200).send({
           success: true,
           message: "Vehicle List.",
@@ -521,6 +521,39 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         } as ApiResponse<STSEntry[]>);
       } catch (error) {
         console.log("Get STS Entry:", error);
+        return reply.status(500).send(errorResponse);
+      }
+    }
+  );
+
+  fastify.get(
+    "/manager/vehicle/:stsId",
+    {
+      preHandler: [
+        fastify.authenticate,
+        // fastify.permission(Permissions.STSVehicleRead),// change this
+      ],
+    },
+    async function (request, reply) {
+      try {
+        const { stsId } = request.params as { stsId: string };
+
+        const vehicle = await prisma.vehicle.findMany({
+          where: {
+            stsId: stsId,
+          },
+        });
+
+        const data = vehicle;
+
+
+        return reply.status(200).send({
+          success: true,
+          message: "Vehicle List.",
+          data: data,
+        } as ApiResponse<Vehicle[]>);
+      } catch (error) {
+        console.log("Get STS Vehicle List:", error);
         return reply.status(500).send(errorResponse);
       }
     }
