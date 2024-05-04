@@ -431,7 +431,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           },
           include: {
             role: true,
-          }
+          },
         });
 
         if (user?.stsId === null) {
@@ -440,7 +440,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
             message: "User is not assigned to any STS.",
           });
         }
-        
+
         const data = await prisma.sTSEntry.create({
           data: {
             arrivalTime: new Date(arrivalTime),
@@ -488,7 +488,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           },
           include: {
             role: true,
-          }
+          },
         });
 
         if (user?.stsId === null && user.role.name !== "Admin") {
@@ -500,10 +500,10 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
         let whereCondition = {};
 
-        if(user?.stsId !== null) {
+        if (user?.stsId !== null) {
           whereCondition = {
-            stsId: user?.stsId
-          }
+            stsId: user?.stsId,
+          };
         }
 
         const data = await prisma.sTSEntry.findMany({
@@ -537,14 +537,41 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     async function (request, reply) {
       try {
         const { stsId } = request.params as { stsId: string };
+        const { distance } = request.query as { distance?: string };
 
         const vehicle = await prisma.vehicle.findMany({
           where: {
             stsId: stsId,
           },
         });
+        let data;
+        if(distance===null) {
+          data = vehicle;
+        }
+        else{
+          // loaded oil cost per km
+          // waste weight in tons
+          // distance in km
 
-        const data = vehicle;
+          // need 
+          // optimized vehicle List
+          // oil cost minimal
+          // waste transfer maximal
+
+          const sts = await prisma.sTS.findUnique({
+            where: {
+              id: stsId
+            },
+            select :{
+              capacity: true
+            }
+          }).then(res => res?.capacity || 0);
+
+
+
+          data = optimize(vehicle, distance);
+        }
+
 
 
         return reply.status(200).send({
