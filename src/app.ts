@@ -10,6 +10,7 @@ import {
 import fjwt, { FastifyJWT } from "@fastify/jwt";
 import permissionMiddleware from "./middleware/permissionsMiddleware";
 import cors from "@fastify/cors";
+import helmet from '@fastify/helmet';
 
 export interface AppOptions
   extends FastifyServerOptions,
@@ -22,6 +23,8 @@ const app: FastifyPluginAsync<AppOptions> = async (
   opts
 ): Promise<void> => {
   // Place here your custom code!
+  fastify.register(helmet);
+
   const secret = fs.readFileSync(join(__dirname, "secret-key"));
   fastify.register(require('@fastify/secure-session'), {
     sessionName: 'session',
@@ -36,6 +39,7 @@ const app: FastifyPluginAsync<AppOptions> = async (
       maxAge: 24 * 60 * 60, // 1 day
     }
   })
+  fastify.register(require('@fastify/csrf-protection'), { sessionPlugin: '@fastify/secure-session' })
 
   await fastify.register(cors, {
     origin: "http://localhost:5173",

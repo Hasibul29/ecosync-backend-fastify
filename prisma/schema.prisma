@@ -71,19 +71,22 @@ model Vehicle {
   STSEntry         STSEntry[]
   LandfillEntry    LandfillEntry[]
   TodaysFleet      TodaysFleet[]
+  BillingSlip      BillingSlip[]
+  TravelRoute      TravelRoute[]
 }
 
 model STS {
-  id          String        @id @default(uuid())
-  name        String
-  wardNo      String        @unique
-  latitude    Float
-  longitude   Float
-  capacity    Float
-  Vehicle     Vehicle[]
-  User        User[]
-  STSEntry    STSEntry[]
-  TodaysFleet TodaysFleet[]
+  id            String        @id @default(uuid())
+  name          String
+  wardNo        String        @unique
+  latitude      Float
+  longitude     Float
+  capacity      Float
+  Vehicle       Vehicle[]
+  User          User[]
+  STSEntry      STSEntry[]
+  TodaysFleet   TodaysFleet[]
+  TravelRoute   TravelRoute[]
 }
 
 model Landfill {
@@ -95,6 +98,7 @@ model Landfill {
   operationalTimespan String
   User                User[]
   LandfillEntry       LandfillEntry[]
+  TravelRoute         TravelRoute[]
 }
 
 model STSEntry {
@@ -119,7 +123,6 @@ model LandfillEntry {
   departureTime DateTime
 }
 
-// TodaysFleet will have the list of selected vehicles
 model TodaysFleet {
   id       String    @id @default(uuid())
   date     String
@@ -128,4 +131,27 @@ model TodaysFleet {
   vehicles Vehicle[]
 
   @@unique([date, stsId])
+}
+
+model BillingSlip {
+  id                 String   @id @default(uuid())
+  vehicle            Vehicle  @relation(fields: [vehicleNumber], references: [vehicleNumber], onDelete: SetDefault)
+  vehicleNumber      String   @default("Deleted")
+  stsName            String
+  landfillName       String
+  wasteVolume        Float
+  fuelCost           Float
+  generatedTimeStamp DateTime @default(now())
+}
+
+// travel route
+model TravelRoute {
+  id        String     @id @default(uuid())
+  totalTime      Float
+  totalDistance   Float
+  routeList Json
+  createdAt DateTime
+  sts       STS[]
+  landfill  Landfill[]
+  vehicle   Vehicle[]
 }

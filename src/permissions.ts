@@ -63,4 +63,7 @@ export enum Permissions {
   ProfileRead = "profile:read",
   ProfileUpdate = "profile:update",
 
+  // Billing
+  BillingRead = "billing:read",
+
 } 

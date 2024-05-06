@@ -1,7 +1,14 @@
 import { FastifyPluginAsync } from "fastify";
 import prisma from "../../utils/client";
 import { ApiResponse, errorResponse } from "../../constants/constants";
-import { Landfill, LandfillEntry, Prisma, User, Vehicle } from "@prisma/client";
+import {
+  BillingSlip,
+  Landfill,
+  LandfillEntry,
+  Prisma,
+  User,
+  Vehicle,
+} from "@prisma/client";
 import { Permissions } from "../../permissions";
 
 const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
@@ -39,7 +46,7 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     },
     async function (request, reply) {
       try {
-        const { name,latitude,longitude,capacity,operationalTimespan } =
+        const { name, latitude, longitude, capacity, operationalTimespan } =
           request.body as Landfill;
         const data = await prisma.landfill.create({
           data: {
@@ -82,11 +89,11 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     async function (request, reply) {
       try {
         const { landfillId } = request.params as { landfillId: string };
-        const {name, capacity, latitude, longitude,operationalTimespan } =
+        const { name, capacity, latitude, longitude, operationalTimespan } =
           request.body as Partial<Landfill>;
         const updatedData: Partial<Landfill> = {};
 
-        if(name !== undefined) {
+        if (name !== undefined) {
           updatedData.name = name;
         }
         if (capacity !== undefined) {
@@ -98,7 +105,7 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         if (longitude !== undefined) {
           updatedData.longitude = longitude;
         }
-        if(operationalTimespan !== undefined) {
+        if (operationalTimespan !== undefined) {
           updatedData.operationalTimespan = operationalTimespan;
         }
 
@@ -187,7 +194,7 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           },
         });
 
-        if(user?.landfillId !== null) {
+        if (user?.landfillId !== null) {
           return reply.status(400).send({
             success: true,
             message: "Manager Already Added to another Landfill.",
@@ -235,7 +242,7 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           },
           include: {
             role: true,
-          }
+          },
         });
         data;
         return reply.status(200).send({
@@ -288,7 +295,7 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       }
     }
   );
-  
+
   fastify.post(
     "/entry/:userId",
     {
@@ -311,7 +318,7 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           },
           include: {
             role: true,
-          }
+          },
         });
 
         if (user?.landfillId === null) {
@@ -320,7 +327,7 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
             message: "User is not assigned to any Landfill.",
           });
         }
-        
+
         const data = await prisma.landfillEntry.create({
           data: {
             arrivalTime: new Date(arrivalTime),
@@ -338,6 +345,67 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
             },
           },
         });
+
+        const vehicle = await prisma.vehicle.findUnique({
+          where: {
+            vehicleNumber: vehicleNumber,
+          },
+        });
+        const landfill = await prisma.landfill.findUnique({
+          where: {
+            id: user?.landfillId,
+          },
+        });
+
+        const stsEntry = await prisma.sTSEntry.findMany({
+          where: {
+            vehicleId: vehicle?.id,
+          },
+          orderBy: {
+            departureTime: "desc",
+          },
+        })
+        const stsId = stsEntry[0].stsId;
+
+        const sts = await prisma.sTS.findUnique({
+          where: {
+            id: stsId,
+          },
+        });
+
+        const travelRoute = await prisma.travelRoute.findMany({
+          where: {
+              sts:{ 
+                every: {
+                  id: stsId
+                }
+              },
+              landfill: {
+                every: {
+                  id: user?.landfillId
+                }
+              },
+          },
+          orderBy: {
+            createdAt: "desc",
+          }
+        });
+
+        const distance = travelRoute[0].totalDistance ?? 0;
+        const fuelCostLoaded = vehicle?.fuelCostLoaded ?? 0;
+        const fuelCostUnloaded = vehicle?.fuelCostUnloaded ?? 0;
+        const fuelCost = fuelCostUnloaded + (3/5) * (fuelCostLoaded - fuelCostUnloaded);
+
+        await prisma.billingSlip.create({
+          data: {
+            wasteVolume: wasteVolume,
+            vehicleNumber: vehicle?.vehicleNumber ?? "",
+            landfillName: landfill?.name ?? "",
+            stsName: sts?.name ?? "",
+            fuelCost: distance * fuelCost,
+          },
+        });
+
         return reply.status(200).send({
           success: true,
           message: "Landfill Entry Created.",
@@ -368,10 +436,10 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           },
           include: {
             role: true,
-          }
+          },
         });
 
-        if (user?.lastName === null && user.role.name !== "Admin") {
+        if (user?.landfillId === null && user.role.name !== "Admin") {
           return reply.status(400).send({
             success: false,
             message: "User is not assigned to any Landfill.",
@@ -380,10 +448,10 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
         let whereCondition = {};
 
-        if(user?.landfillId !== null) {
+        if (user?.landfillId !== null) {
           whereCondition = {
-            landfillId: user?.landfillId
-          }
+            landfillId: user?.landfillId,
+          };
         }
 
         const data = await prisma.landfillEntry.findMany({
@@ -406,6 +474,57 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     }
   );
 
+  fastify.get(
+    "/billing/:userId",
+    {
+      preHandler: [
+        fastify.authenticate,
+        fastify.permission(Permissions.BillingRead),
+      ],
+    },
+    async function (request, reply) {
+      try {
+        const { userId } = request.params as { userId: string };
+
+        const user = await prisma.user.findUnique({
+          where: {
+            id: userId,
+          },
+          include: {
+            role: true,
+          },
+        });
+
+        if (user?.landfillId === null && user.role.name !== "Admin") {
+          return reply.status(400).send({
+            success: false,
+            message: "User is not assigned to any Landfill.",
+          });
+        }
+
+        let whereCondition = {};
+
+        if (user?.landfillId !== null) {
+          whereCondition = {
+            landfillId: user?.landfillId,
+          };
+        }
+
+        const data = await prisma.billingSlip.findMany({
+          where: whereCondition,
+        });
+
+        return reply.status(200).send({
+          success: true,
+          message: "Billing List.",
+          data: data,
+        } as ApiResponse<BillingSlip[]>);
+      } catch (error) {
+        console.log("Get Billing:", error);
+        return reply.status(500).send(errorResponse);
+      }
+    }
+  );
 };
 
 export default landfill;
