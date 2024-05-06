@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "TodaysFleet" ALTER COLUMN "date" DROP DEFAULT,
+ALTER COLUMN "date" SET DATA TYPE TEXT;

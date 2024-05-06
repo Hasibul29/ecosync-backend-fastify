@@ -1,7 +1,7 @@
 import { User } from "@prisma/client";
 import { FastifyPluginAsync } from "fastify";
 import { ApiResponse, errorResponse } from "../../constants/constants";
-// import { Permissions } from "../../permissions";
+import { Permissions } from "../../permissions";
 import prisma from "../../utils/client";
 
 const root: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
@@ -17,7 +17,7 @@ const root: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.ProfileRead),
+        fastify.permission(Permissions.ProfileRead),
       ],
     },
     async function (request, reply) {
@@ -60,7 +60,7 @@ const root: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.ProfileUpdate),
+        fastify.permission(Permissions.ProfileUpdate),
       ],
     },
     async function (request, reply) {

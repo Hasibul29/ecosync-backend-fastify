@@ -13,7 +13,9 @@ const root: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     const totalGurbadgeDisposed = (await prisma.landfillEntry.findMany({})).reduce(
         (acc, cur) => acc + cur.wasteVolume, 0.0
       );
+    // const totalCost = 0;
 
+    
     return {
       data: {
         totalVehicle,
@@ -21,10 +23,13 @@ const root: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         totalLandfill,
         totalUser,
         totalGurbadgeCollected,
-        totalGurbadgeDisposed
+        totalGurbadgeDisposed,
+
       },
     };
   });
 };
 
 export default root;
+
+// billing

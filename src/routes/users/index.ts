@@ -17,7 +17,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.UsersRead),
+        fastify.permission(Permissions.UsersRead),
       ],
     },
     async (request, reply) => {
@@ -67,7 +67,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.UsersWrite),
+        fastify.permission(Permissions.UsersWrite),
       ],
     },
     async (request, reply) => {
@@ -143,7 +143,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.UsersUpdate),
+        fastify.permission(Permissions.UsersUpdate),
       ],
     },
     async (request, reply) => {
@@ -188,7 +188,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.UsersDelete),
+        fastify.permission(Permissions.UsersDelete),
       ],
     },
     async (request, reply) => {
@@ -223,7 +223,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.UsersRoleReadAll),
+        fastify.permission(Permissions.UsersRoleReadAll),
       ],
     },
     async (request, reply) => {
