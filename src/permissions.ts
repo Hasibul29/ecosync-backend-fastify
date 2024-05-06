@@ -43,6 +43,10 @@ export enum Permissions {
   STSVehicleDelete = "sts_vehicle:delete",
   STSEntryRead = "sts_entry:read",
   STSEntryWrite = "sts_entry:write",
+  STSManagerVehicleRead = "sts_manager_vehicle:read",
+  STSVehicleTodaysFleetRead = "sts_vehicle_todays_fleet:read",
+  STSVehicleTodaysFleetWrite = "sts_vehicle_todays_fleet:write",
+  STSVehicleTodaysFleetDelete = "sts_vehicle_todays_fleet:delete",
 
   // Landfill
   LandfillRead = "landfill:read",

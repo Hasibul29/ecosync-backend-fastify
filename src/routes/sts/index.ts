@@ -1,8 +1,19 @@
 import { FastifyPluginAsync } from "fastify";
 import prisma from "../../utils/client";
 import { ApiResponse, errorResponse } from "../../constants/constants";
-import { Prisma, STS, STSEntry, User, Vehicle } from "@prisma/client";
-// import { Permissions } from "../../permissions";
+import {
+  Prisma,
+  STS,
+  STSEntry,
+  TodaysFleet,
+  User,
+  Vehicle,
+} from "@prisma/client";
+import { Permissions } from "../../permissions";
+
+interface SuggestedVehicle extends Vehicle {
+  isSuggested: boolean;
+}
 
 const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   fastify.get(
@@ -10,7 +21,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.STSRead),
+        fastify.permission(Permissions.STSRead),
       ],
     },
     async function (request, reply) {
@@ -34,7 +45,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.STSWrite),
+        fastify.permission(Permissions.STSWrite),
       ],
     },
     async function (request, reply) {
@@ -76,7 +87,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.STSUpdate),
+        fastify.permission(Permissions.STSUpdate),
       ],
     },
     async function (request, reply) {
@@ -135,7 +146,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.STSDelete),
+        fastify.permission(Permissions.STSDelete),
       ],
     },
     async function (request, reply) {
@@ -172,7 +183,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.STSVehicleWrite),
+        fastify.permission(Permissions.STSVehicleWrite),
       ],
     },
     async function (request, reply) {
@@ -223,7 +234,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.STSVehicleRead),
+        fastify.permission(Permissions.STSVehicleRead),
       ],
     },
     async function (request, reply) {
@@ -253,7 +264,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.STSVehicleDelete),
+        fastify.permission(Permissions.STSVehicleDelete),
       ],
     },
     async function (request, reply) {
@@ -292,7 +303,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.STSManagerWrite),
+        fastify.permission(Permissions.STSManagerWrite),
       ],
     },
     async function (request, reply) {
@@ -342,7 +353,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.STSManagerRead),
+        fastify.permission(Permissions.STSManagerRead),
       ],
     },
     async function (request, reply) {
@@ -375,7 +386,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.STSManagerDelete),
+        fastify.permission(Permissions.STSManagerDelete),
       ],
     },
     async function (request, reply) {
@@ -414,7 +425,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.STSEntryWrite),
+        fastify.permission(Permissions.STSEntryWrite),
       ],
     },
     async function (request, reply) {
@@ -475,7 +486,7 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.STSEntryRead),
+        fastify.permission(Permissions.STSEntryRead),
       ],
     },
     async function (request, reply) {
@@ -531,55 +542,67 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     {
       preHandler: [
         fastify.authenticate,
-        // fastify.permission(Permissions.STSVehicleRead),// change this
+        fastify.permission(Permissions.STSManagerVehicleRead),
       ],
     },
     async function (request, reply) {
       try {
         const { stsId } = request.params as { stsId: string };
-        const { distance } = request.query as { distance?: string };
-
         const vehicle = await prisma.vehicle.findMany({
           where: {
             stsId: stsId,
           },
         });
-        let data;
-        if(distance===null) {
-          data = vehicle;
-        }
-        else{
-          // loaded oil cost per km
-          // waste weight in tons
-          // distance in km
 
-          // need 
-          // optimized vehicle List
-          // oil cost minimal
-          // waste transfer maximal
-
-          const wasteVolume = await prisma.sTS.findUnique({
+        let data: SuggestedVehicle[] = [];
+        const wasteVolume = await prisma.sTS
+          .findUnique({
             where: {
-              id: stsId
+              id: stsId,
             },
-            select :{
-              capacity: true
-            }
-          }).then(res => res?.capacity || 0);
+            select: {
+              capacity: true,
+            },
+          })
+          .then((res) => res?.capacity || 0);
 
+        const sleectedFleet = await prisma.todaysFleet.findUnique({
+          where: {
+            date_stsId: {
+              date: new Date().toISOString().split("T")[0],
+              stsId: stsId,
+            },
+          },
+          include: {
+            vehicles: true,
+          },
+        });
 
+        const fleet = optimizedFleet(vehicle, wasteVolume);
 
-          data = optimize(vehicle, distance,wasteVolume);
-          
+        data = vehicle
+          .map((vehicle) => {
+            return {
+              ...vehicle,
+              isSuggested: fleet.includes(vehicle),
+            };
+          })
+          .sort((a, b) => (a.isSuggested ? -1 : 1));
+        if (sleectedFleet) {
+          console.log("sleectedFleet", sleectedFleet);
+          // remove the sleectedFleet from fleet
+          data = data.filter((vehicle) => {
+            return !sleectedFleet.vehicles
+              .map((vehicle) => vehicle.vehicleNumber)
+              .includes(vehicle.vehicleNumber);
+          });
         }
-
-
 
         return reply.status(200).send({
           success: true,
           message: "Vehicle List.",
           data: data,
-        } as ApiResponse<Vehicle[]>);
+        } as ApiResponse<SuggestedVehicle[]>);
       } catch (error) {
         console.log("Get STS Vehicle List:", error);
         return reply.status(500).send(errorResponse);
@@ -587,10 +610,224 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     }
   );
 
-  function optimize(vehicle: Vehicle[], distance: string, wasteVolume: number) {
-    //
+  fastify.post(
+    "/:stsId/todays-fleet",
+    {
+      preHandler: [
+        fastify.authenticate,
+        fastify.permission(Permissions.STSVehicleTodaysFleetWrite),
+      ],
+    },
+    async function (request, reply) {
+      try {
+        const { stsId } = request.params as { stsId: string };
+        const { vehicles } = request.body as {
+          vehicles: Partial<SuggestedVehicle>[];
+        };
+        console.log(request.body);
 
-  }
+        const data = await prisma.todaysFleet.upsert({
+          create: {
+            date: new Date().toISOString().split("T")[0],
+            stsId: stsId,
+            vehicles: {
+              connect: [
+                ...vehicles.map((vehicle) => ({
+                  vehicleNumber: vehicle.vehicleNumber,
+                })),
+              ],
+            },
+          },
+          update: {
+            vehicles: {
+              connect: [
+                ...vehicles.map((vehicle) => ({
+                  vehicleNumber: vehicle.vehicleNumber,
+                })),
+              ],
+            },
+          },
+          where: {
+            date_stsId: {
+              date: new Date().toISOString().split("T")[0],
+              stsId: stsId,
+            },
+          },
+          include: {
+            vehicles: true,
+          },
+        });
+        return reply.status(200).send({
+          success: true,
+          message: "Todays Fleet Created.",
+          data: data,
+        } as ApiResponse<TodaysFleet>);
+      } catch (error) {
+        console.log("Create Todays Fleet:", error);
+        return reply.status(500).send(errorResponse);
+      }
+    }
+  );
+
+  fastify.get(
+    "/:stsId/todays-fleet",
+    {
+      preHandler: [
+        fastify.authenticate,
+        fastify.permission(Permissions.STSVehicleTodaysFleetRead),
+      ],
+    },
+    async function (request, reply) {
+      try {
+        const { stsId } = request.params as { stsId: string };
+
+        const data = await prisma.todaysFleet.findUnique({
+          where: {
+            date_stsId: {
+              date: new Date().toISOString().split("T")[0],
+              stsId: stsId,
+            },
+          },
+          include: {
+            vehicles: true,
+          },
+        });
+        return reply.status(200).send({
+          success: true,
+          message: "Todays Fleet.",
+          data: data,
+        } as ApiResponse<TodaysFleet>);
+      } catch (error) {
+        console.log("Get Todays Fleet:", error);
+        return reply.status(500).send(errorResponse);
+      }
+    }
+  );
+
+  fastify.delete(
+    "/:stsId/todays-fleet/:vehicleNumber",
+    {
+      preHandler: [
+        fastify.authenticate,
+        fastify.permission(Permissions.STSVehicleTodaysFleetDelete),
+      ],
+    },
+    async function (request, reply) {
+      try {
+        const { stsId, vehicleNumber } = request.params as {
+          stsId: string;
+          vehicleNumber: string;
+        };
+        await prisma.todaysFleet.update({
+          where: {
+            date_stsId: {
+              date: new Date().toISOString().split("T")[0],
+              stsId: stsId,
+            },
+          },
+          data: {
+            vehicles: {
+              disconnect: {
+                vehicleNumber: vehicleNumber,
+              },
+            },
+          },
+        });
+        return reply.status(200).send({
+          success: true,
+          message: "Vehicle Deleted From Fleet.",
+        } as ApiResponse);
+      } catch (error) {
+        console.log("Delete Vehicle:", error);
+        return reply.status(500).send(errorResponse);
+      }
+    }
+  );
 };
+
+function optimizedFleet(vehicles: Vehicle[], wasteVolume: number): Vehicle[] {
+  const n = vehicles.length;
+  const memo: { [key: string]: Vehicle[] } = {};
+
+  function dp(
+    remainingWasteVolume: number,
+    currentIndex: number,
+    trips: number[]
+  ): Vehicle[] {
+    if (currentIndex === n) {
+      return [];
+    }
+
+    const memoKey = `${remainingWasteVolume},${currentIndex}`;
+    if (memo.hasOwnProperty(memoKey)) {
+      return memo[memoKey];
+    }
+
+    const currentVehicle = vehicles[currentIndex];
+
+    const maxTrips = Math.min(
+      3 - trips[currentIndex],
+      Math.floor(remainingWasteVolume / wastePerTrip(currentVehicle))
+    );
+
+    let bestOption: Vehicle[] = [];
+
+    let bestWasteCollected = 0;
+    let bestFuelCost = Infinity;
+    let bestNumTrucks = Infinity;
+
+    for (let numTrips = 0; numTrips <= maxTrips; numTrips++) {
+      const nextWasteVolume =
+        remainingWasteVolume - numTrips * wastePerTrip(currentVehicle);
+
+      const option = dp(nextWasteVolume, currentIndex + 1, trips.slice());
+
+      const currentOption = Array(numTrips).fill(currentVehicle);
+      const currentTotalOption = [...currentOption, ...option];
+
+      const currentWasteCollected = getTotalWasteCollected(currentTotalOption);
+      const currentFuelCost = getTotalFuelCost(currentTotalOption);
+      const currentNumTrucks = currentOption.length;
+
+      if (
+        currentWasteCollected > bestWasteCollected ||
+        (currentWasteCollected === bestWasteCollected &&
+          currentFuelCost < bestFuelCost) ||
+        (currentWasteCollected === bestWasteCollected &&
+          currentFuelCost === bestFuelCost &&
+          currentNumTrucks < bestNumTrucks)
+      ) {
+        bestOption = currentTotalOption;
+        bestWasteCollected = currentWasteCollected;
+        bestFuelCost = currentFuelCost;
+        bestNumTrucks = currentNumTrucks;
+      }
+    }
+
+    memo[memoKey] = bestOption;
+    return bestOption;
+  }
+
+  function wastePerTrip(vehicle: Vehicle): number {
+    return vehicle.capacity;
+  }
+
+  function getTotalWasteCollected(vehicleList: Vehicle[]): number {
+    return vehicleList.reduce(
+      (totalWaste, vehicle) => totalWaste + wastePerTrip(vehicle),
+      0
+    );
+  }
+
+  function getTotalFuelCost(vehicleList: Vehicle[]): number {
+    return vehicleList.reduce(
+      (totalCost, vehicle) => totalCost + vehicle.fuelCostLoaded,
+      0
+    );
+  }
+
+  const initialTrips = Array(n).fill(0);
+  return dp(wasteVolume, 0, initialTrips);
+}
 
 export default sts;

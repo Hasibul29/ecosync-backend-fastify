@@ -24,6 +24,7 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         include: {
           password: true,
           role: true,
+          stsManager: true,
         },
       });
       console.log(user);
