@@ -1,4 +1,4 @@
-import {initializeApp, applicationDefault } from 'firebase-admin/app';
+// import {initializeApp, applicationDefault } from 'firebase-admin/app';
 import { FastifyPluginAsync } from "fastify";
 import { getMessaging } from "firebase-admin/messaging";
 // import prisma from "../utils/client";
