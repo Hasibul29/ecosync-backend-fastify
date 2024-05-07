@@ -12,58 +12,70 @@ import generateOTP from "../../utils/generateOTP";
 import { Permissions } from "../../permissions";
 
 const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
-  fastify.post(
-    "/login",
-    {
-      preHandler: [fastify.permission(Permissions.Login)],
-    },
-    async function (request, reply) {
-      try {
-        const { email, password } = request.body as {
-          email: string;
-          password: string;
-        };
-        const user = await prisma.user.findUnique({
-          where: {
-            email: email,
+  fastify.post("/login", async function (request, reply) {
+    try {
+      const { email, password } = request.body as {
+        email: string;
+        password: string;
+      };
+      const user = await prisma.user.findUnique({
+        where: {
+          email: email,
+        },
+        include: {
+          password: true,
+          role: true,
+          stsManager: true,
+        },
+      });
+
+      const permission = await prisma.role.findUnique({
+        where: {
+          id: user?.roleId,
+        },
+        include: {
+          permissions: {
+            where: {
+              name: Permissions.Login,
+            },
           },
-          include: {
-            password: true,
-            role: true,
-            stsManager: true,
-          },
-        });
-        const isMatch =
-          user &&
-          (await compare(password, user.password?.passwordHash as string));
-        console.log(isMatch);
-        if (!user || !isMatch) {
-          return reply.code(401).send({
-            success: false,
-            message: "Invalid email or password",
-          });
-        }
-        const payload = {
-          id: user.id,
-          email: user.email,
-        };
-        const token = request.jwt.sign(payload);
+        },
+      });
 
-        request.session.set("access_token", token);
-
-        const data = { ...user, password: undefined };
-
-        return reply.status(200).send({
-          success: true,
-          message: "Login Successful",
-          data: data,
-        } as ApiResponse<User>);
-      } catch (error) {
-        console.log("Login", error);
-        return reply.status(500).send(errorResponse);
+      if (!permission || permission.permissions.length === 0) {
+        return reply.code(403).send({ success: false, message: "Forbidden" });
       }
+
+      const isMatch =
+        user &&
+        (await compare(password, user.password?.passwordHash as string));
+      console.log(isMatch);
+      if (!user || !isMatch) {
+        return reply.code(401).send({
+          success: false,
+          message: "Invalid email or password",
+        });
+      }
+      const payload = {
+        id: user.id,
+        email: user.email,
+      };
+      const token = request.jwt.sign(payload);
+
+      request.session.set("access_token", token);
+
+      const data = { ...user, password: undefined };
+
+      return reply.status(200).send({
+        success: true,
+        message: "Login Successful",
+        data: data,
+      } as ApiResponse<User>);
+    } catch (error) {
+      console.log("Login", error);
+      return reply.status(500).send(errorResponse);
     }
-  );
+  });
 
   fastify.get(
     "/authenticated",
