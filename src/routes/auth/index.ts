@@ -9,55 +9,61 @@ import {
   resetPassword,
 } from "../../utils/accountCreateEmail";
 import generateOTP from "../../utils/generateOTP";
+import { Permissions } from "../../permissions";
 
 const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
-  fastify.post("/login", async function (request, reply) {
-    try {
-      const { email, password } = request.body as {
-        email: string;
-        password: string;
-      };
-      const user = await prisma.user.findUnique({
-        where: {
-          email: email,
-        },
-        include: {
-          password: true,
-          role: true,
-          stsManager: true,
-        },
-      });
-      console.log(user);
-      const isMatch =
-        user &&
-        (await compare(password, user.password?.passwordHash as string));
-      console.log(isMatch);
-      if (!user || !isMatch) {
-        return reply.code(401).send({
-          success: false,
-          message: "Invalid email or password",
+  fastify.post(
+    "/login",
+    {
+      preHandler: [fastify.permission(Permissions.Login)],
+    },
+    async function (request, reply) {
+      try {
+        const { email, password } = request.body as {
+          email: string;
+          password: string;
+        };
+        const user = await prisma.user.findUnique({
+          where: {
+            email: email,
+          },
+          include: {
+            password: true,
+            role: true,
+            stsManager: true,
+          },
         });
+        const isMatch =
+          user &&
+          (await compare(password, user.password?.passwordHash as string));
+        console.log(isMatch);
+        if (!user || !isMatch) {
+          return reply.code(401).send({
+            success: false,
+            message: "Invalid email or password",
+          });
+        }
+        const payload = {
+          id: user.id,
+          email: user.email,
+        };
+        const token = request.jwt.sign(payload);
+
+        request.session.set("access_token", token);
+
+        const data = { ...user, password: undefined };
+
+        return reply.status(200).send({
+          success: true,
+          message: "Login Successful",
+          data: data,
+        } as ApiResponse<User>);
+      } catch (error) {
+        console.log("Login", error);
+        return reply.status(500).send(errorResponse);
       }
-      const payload = {
-        id: user.id,
-        email: user.email,
-      };
-      const token = request.jwt.sign(payload);
-
-      request.session.set("access_token", token);
-
-      const data = { ...user, password: undefined };
-
-      return reply.status(200).send({
-        success: true,
-        message: "Login Successful",
-        data: data,
-      } as ApiResponse<User>);
-    } catch (error) {
-      console.log("Login", error);
-      return reply.status(500).send(errorResponse);
     }
-  });
+  );
 
   fastify.get(
     "/authenticated",
@@ -236,57 +242,66 @@ const auth: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     }
   });
 
-  fastify.post("/change-password/:userId", async function (request, reply) {
-    try {
-      const { userId } = request.params as { userId: string };
-      const { newPassword, confirmPassword } = request.body as {
-        newPassword: string;
-        confirmPassword: string;
-      };
+  fastify.post(
+    "/change-password/:userId",
+    {
+      preHandler: [
+        fastify.authenticate,
+        fastify.permission(Permissions.ChangePassword),
+      ],
+    },
+    async function (request, reply) {
+      try {
+        const { userId } = request.params as { userId: string };
+        const { newPassword, confirmPassword } = request.body as {
+          newPassword: string;
+          confirmPassword: string;
+        };
 
-      if (newPassword !== confirmPassword) {
-        return reply.status(400).send({
-          success: false,
-          message: "Password didn't match.",
+        if (newPassword !== confirmPassword) {
+          return reply.status(400).send({
+            success: false,
+            message: "Password didn't match.",
+          } as ApiResponse);
+        }
+        const passwordHash = await hash(newPassword);
+        await prisma.auth.update({
+          data: {
+            passwordHash: passwordHash,
+          },
+          where: {
+            userId: userId,
+          },
+        });
+
+        const data = await prisma.user.findUnique({
+          where: {
+            id: userId,
+          },
+        });
+        const mailOptions = {
+          from: {
+            name: "EcoSync",
+            address: process.env.SENDER_EMAIL || "",
+          },
+          to: data?.email,
+          subject: "Password change Successful.",
+          html: changePassword({
+            name: `${data?.firstName} ${data?.lastName}`,
+          }),
+        };
+
+        transporter.sendMail(mailOptions);
+        return reply.status(200).send({
+          success: true,
+          message: "Password change successful.",
         } as ApiResponse);
+      } catch (error) {
+        console.log("change password", error);
+        return reply.status(500).send(errorResponse);
       }
-      const passwordHash = await hash(newPassword);
-      await prisma.auth.update({
-        data: {
-          passwordHash: passwordHash,
-        },
-        where: {
-          userId: userId,
-        },
-      });
-
-      const data = await prisma.user.findUnique({
-        where: {
-          id: userId,
-        },
-      });
-      const mailOptions = {
-        from: {
-          name: "EcoSync",
-          address: process.env.SENDER_EMAIL || "",
-        },
-        to: data?.email,
-        subject: "Password change Successful.",
-        html: changePassword({
-          name: `${data?.firstName} ${data?.lastName}`,
-        }),
-      };
-
-      transporter.sendMail(mailOptions);
-      return reply.status(200).send({
-        success: true,
-        message: "Password change successful.",
-      } as ApiResponse);
-    } catch (error) {
-      console.log("change password", error);
-      return reply.status(500).send(errorResponse);
     }
-  });
+  );
 };
 
 export default auth;

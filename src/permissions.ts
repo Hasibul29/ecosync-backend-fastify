@@ -66,4 +66,10 @@ export enum Permissions {
   // Billing
   BillingRead = "billing:read",
 
+  // Login
+  Login = "login",
+
+  // Chnage Password
+  ChangePassword = "change_password",
+
 } 
