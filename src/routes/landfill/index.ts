@@ -505,8 +505,14 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         let whereCondition = {};
 
         if (user?.landfillId !== null) {
+          const landfill = await prisma.landfill.findUnique({
+            where: {
+              id: user?.landfillId,
+            },
+          })
+
           whereCondition = {
-            landfillId: user?.landfillId,
+            landfillName: landfill?.name,
           };
         }
 

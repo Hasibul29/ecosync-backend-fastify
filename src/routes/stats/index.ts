@@ -15,16 +15,20 @@ const root: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     );
     // const totalCost = 0;
 
-    const landfillLocation = (await prisma.landfill.findMany({})).map(landfill => {
+    const landfill = (await prisma.landfill.findMany({})).map(landfill => {
       return {
+        name: landfill.name,
+        capacity: landfill.capacity,
         latitude: landfill.latitude,
         longitude: landfill.longitude
       }
     });
-    const stsLocation = (await prisma.sTS.findMany({})).map(sts => {
+    const sts = (await prisma.sTS.findMany({})).map(sts => {
       return {
+        name: sts.name,
+        capacity: sts.capacity,
         latitude: sts.latitude,
-        longitude: sts.longitude
+        longitude: sts.longitude,
       }
     })
 
@@ -37,8 +41,8 @@ const root: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         totalUser,
         totalGurbadgeCollected,
         totalGurbadgeDisposed,
-        landfillLocation,
-        stsLocation
+        landfill,
+        sts
       },
     };
   });
