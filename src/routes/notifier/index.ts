@@ -3,12 +3,12 @@ import { FastifyPluginAsync } from "fastify";
 import { getMessaging } from "firebase-admin/messaging";
 // import prisma from "../utils/client";
 
-process.env.GOOGLE_APPLICATION_CREDENTIALS;
+// process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
-initializeApp({
-    credential: applicationDefault(),
-    projectId: 'ecosync-notifier',
-  });
+// initializeApp({
+//     credential: applicationDefault(),
+//     projectId: 'ecosync-notifier',
+//   });
 
 const notify: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   fastify.get("/", async function (request, reply) {
