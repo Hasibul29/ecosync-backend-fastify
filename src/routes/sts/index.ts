@@ -548,6 +548,14 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     async function (request, reply) {
       try {
         const { stsId } = request.params as { stsId: string };
+
+        if(!stsId) {
+          return reply.status(400).send({
+            success: false,
+            message: "User is not assigned to any STS.",
+          });
+        }
+        
         const vehicle = await prisma.vehicle.findMany({
           where: {
             stsId: stsId,
@@ -680,6 +688,13 @@ const sts: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     async function (request, reply) {
       try {
         const { stsId } = request.params as { stsId: string };
+
+        if(!stsId) {
+          return reply.status(400).send({
+            success: false,
+            message: "User is not assigned to any STS.",
+          });
+        }
 
         const data = await prisma.todaysFleet.findUnique({
           where: {

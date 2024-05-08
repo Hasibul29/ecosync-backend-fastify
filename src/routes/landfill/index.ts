@@ -364,12 +364,13 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           orderBy: {
             departureTime: "desc",
           },
-        })
-        const stsId = stsEntry[0].stsId;
+        });
+
+        const stsId = stsEntry.length > 0 ? stsEntry[0].stsId : vehicle?.stsId;
 
         const sts = await prisma.sTS.findUnique({
           where: {
-            id: stsId,
+            id: stsId ?? "",
           },
         });
 
@@ -377,7 +378,7 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           where: {
               sts:{ 
                 every: {
-                  id: stsId
+                  id: stsId ?? "",
                 }
               },
               landfill: {
@@ -391,7 +392,7 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           }
         });
 
-        const distance = travelRoute[0].totalDistance ?? 0;
+        const distance = travelRoute.length > 0 ? travelRoute[0].totalDistance : 0;
         const fuelCostLoaded = vehicle?.fuelCostLoaded ?? 0;
         const fuelCostUnloaded = vehicle?.fuelCostUnloaded ?? 0;
         const fuelCost = fuelCostUnloaded + (3/5) * (fuelCostLoaded - fuelCostUnloaded);
