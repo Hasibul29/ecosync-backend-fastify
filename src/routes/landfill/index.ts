@@ -392,7 +392,7 @@ const landfill: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           }
         });
 
-        const distance = travelRoute.length > 0 ? travelRoute[0].totalDistance : 28;
+        const distance = travelRoute.length > 0 ? travelRoute[0].totalDistance : 0;
         const fuelCostLoaded = vehicle?.fuelCostLoaded ?? 0;
         const fuelCostUnloaded = vehicle?.fuelCostUnloaded ?? 0;
         const fuelCost = fuelCostUnloaded + (3/5) * (fuelCostLoaded - fuelCostUnloaded);

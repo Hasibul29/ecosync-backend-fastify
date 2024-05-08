@@ -149,8 +149,9 @@ model TravelRoute {
   id        String     @id @default(uuid())
   totalTime      Float
   totalDistance   Float
+  wayPoints Json
   routeList Json
-  createdAt DateTime
+  createdAt DateTime @default(now())
   sts       STS[]
   landfill  Landfill[]
   vehicle   Vehicle[]
