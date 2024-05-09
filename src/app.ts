@@ -42,7 +42,7 @@ const app: FastifyPluginAsync<AppOptions> = async (
   fastify.register(require('@fastify/csrf-protection'), { sessionPlugin: '@fastify/secure-session' })
 
   await fastify.register(cors, {
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173","http://10.0.2.2:42054"],
     credentials: true,
   });
 

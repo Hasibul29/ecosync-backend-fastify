@@ -13,7 +13,7 @@
     "watch:ts": "tsc -w",
     "check:secret": "ts-node src/checkrequired.ts",
     "dev": "npm run build:ts && npm run check:secret && concurrently -k -p \"[{name}]\" -n \"TypeScript,App\" -c \"yellow.bold,cyan.bold\" \"npm:watch:ts\" \"npm:dev:start\"",
-    "dev:start": "fastify start --ignore-watch=.ts$ -w -l info -P dist/app.js"
+    "dev:start": "fastify start --ignore-watch=.ts$ -w -l info -P dist/app.js -c \"config.json\""
   },
   "keywords": [],
   "author": "",
